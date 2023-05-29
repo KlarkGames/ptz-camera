@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" binding="early" xmlns:qt="http://www.qt.io/2015/02/scxml-ext" name="ptz-camera" qt:editorversion="10.0.0" datamodel="ecmascript" initial="INITIALIZATION">
+    <qt:editorinfo initialGeometry="469.82;102.92;-20;-20;40;40"/>
+    <state id="INITIALIZATION">
+        <qt:editorinfo scenegeometry="531.30;233.18;316.71;180.24;306.21;161.47" geometry="531.30;233.18;-214.59;-52.94;306.21;161.47"/>
+        <transition type="external" target="CAMERA_ERROR" cond="cameraErrorOccured">
+            <qt:editorinfo localGeometry="-0.02;52.20" startTargetFactors="20.35;92.29" endTargetFactors="74.62;53.90" movePoint="-81.14;40.57"/>
+        </transition>
+        <transition type="external" target="ARDUINO_ERROR" cond="arduinoErrorOccured">
+            <qt:editorinfo localGeometry="0;164.49" startTargetFactors="34.38;86.86" endTargetFactors="87.01;46.98" movePoint="-129.61;94.68"/>
+        </transition>
+        <transition type="external" cond="cameraReady &amp;&amp; arduinoReady &amp;&amp; settingsReady" target="MAIN_MENU">
+            <qt:editorinfo movePoint="49.50;88.50"/>
+            <assign location="initializedOnce" expr="true"/>
+        </transition>
+    </state>
+    <datamodel>
+        <data id="cameraReady" expr="false"/>
+        <data id="arduinoReady" expr="false"/>
+        <data id="settingsReady" expr="false"/>
+        <data id="cameraErrorOccured"/>
+        <data id="arduinoErrorOccured"/>
+        <data id="initializedOnce" expr="false"/>
+        <data id="workingMode"/>
+    </datamodel>
+    <state id="HARDWARE_ERROR">
+        <qt:editorinfo scenegeometry="40.19;338.12;-85.88;262.61;298.36;299.90" geometry="40.19;338.12;-126.07;-75.51;298.36;299.90"/>
+        <state id="CAMERA_ERROR">
+            <qt:editorinfo scenegeometry="43.23;377.56;-37.42;327.56;201.44;100" geometry="3.04;39.44;-80.65;-50;201.44;100"/>
+        </state>
+        <state id="ARDUINO_ERROR">
+            <qt:editorinfo scenegeometry="22.94;488;-37.06;438;200.72;100" geometry="-17.25;149.88;-60;-50;200.72;100"/>
+        </state>
+        <transition type="external" cond="!arduinoErrorOccured &amp;&amp; !cameraErrorOccured" target="FIXED">
+            <qt:editorinfo localGeometry="-185.29;0" startTargetFactors="16.36;18.49" endTargetFactors="79.30;44.48"/>
+        </transition>
+        <transition type="external" event="exit" target="Final_2">
+            <qt:editorinfo localGeometry="558.46;0" startTargetFactors="91.04;86.10" movePoint="219.17;5.82"/>
+        </transition>
+    </state>
+    <state id="MAIN_MENU">
+        <qt:editorinfo scenegeometry="364.29;623.44;333.09;573.44;273.46;156.36" geometry="364.29;623.44;-31.20;-50;273.46;156.36"/>
+        <transition type="external" target="SETTINGS" event="openSettings">
+            <qt:editorinfo startTargetFactors="88.20;71.50" endTargetFactors="12.35;71.33" movePoint="8.76;11.46"/>
+        </transition>
+        <transition type="external" event="startWorking" target="WORKING">
+            <qt:editorinfo startTargetFactors="39.21;76.97" endTargetFactors="40.85;19.92" movePoint="-48.43;5.45"/>
+        </transition>
+        <transition type="external" event="exit" target="Final_2">
+            <qt:editorinfo movePoint="32.59;8.38"/>
+        </transition>
+    </state>
+    <state id="SETTINGS">
+        <qt:editorinfo scenegeometry="77.38;629.52;40.96;576.10;181.78;151.05" geometry="77.38;629.52;-36.42;-53.42;181.78;151.05"/>
+        <transition type="external" target="MAIN_MENU" event="closeSettings">
+            <qt:editorinfo endTargetFactors="84.74;49.40" movePoint="4.71;9.42"/>
+        </transition>
+    </state>
+    <state id="WORKING">
+        <qt:editorinfo scenegeometry="377.72;925.67;297.72;811.27;344.21;235.12" geometry="377.72;925.67;-80;-114.40;344.21;235.12"/>
+        <transition type="external" event="pauseWorking" target="MAIN_MENU">
+            <qt:editorinfo startTargetFactors="56.97;17.52" endTargetFactors="58.16;83.26" movePoint="69.52;10.89"/>
+        </transition>
+        <transition type="external" target="ARDUINO_ERROR" cond="arduinoErrorOccured">
+            <qt:editorinfo localGeometry="-482.38;0.01" endTargetFactors="12.21;85.64"/>
+        </transition>
+        <transition type="external" target="CAMERA_ERROR" cond="cameraErrorOccured">
+            <qt:editorinfo localGeometry="-464.09;0;-464.09;-576.66" startTargetFactors="5.88;63.30" endTargetFactors="24.02;55.91"/>
+        </transition>
+    </state>
+    <state id="FIXED">
+        <qt:editorinfo scenegeometry="-256.18;397.73;-322.64;347.73;126.46;129.66" geometry="-256.18;397.73;-66.46;-50;126.46;129.66"/>
+        <transition type="external" target="WORKING" cond="initializedOnce">
+            <qt:editorinfo localGeometry="0;568.91" startTargetFactors="39.63;78.31" endTargetFactors="5.59;88"/>
+        </transition>
+        <transition type="external" target="INITIALIZATION" cond="!initializedOnce">
+            <qt:editorinfo localGeometry="0;-194.31" endTargetFactors="8.26;23.54"/>
+        </transition>
+    </state>
+    <final id="Final_2">
+        <qt:editorinfo scenegeometry="744.21;651.63;724.21;631.63;40;40" geometry="744.21;651.63;-20;-20;40;40"/>
+    </final>
+</scxml>
