@@ -29,7 +29,10 @@ Window {
     Processor {
         id: producer
         processorVideoSink: videoOutput.videoSink
+    }
 
+    MountDriver {
+        id: mountDriver
     }
 
     Popup {
@@ -143,6 +146,25 @@ Window {
                 visible: !Style.isMobile() && controls.settingsVisible
                 recorder: recorder
            }
+        }
+
+        Keys.onPressed: {
+            switch (event.key) {
+                case Qt.Key_Up:
+                    mountDriver.sendSignal(6, 3, 1, 200);
+                    break;
+                case Qt.Key_Down:
+                    mountDriver.sendSignal(6, 3, 0, 200);
+                    break;
+                case Qt.Key_Left:
+                    mountDriver.sendSignal(5, 2, 1, 200);
+                    break;
+                case Qt.Key_Right:
+                    mountDriver.sendSignal(5, 2, 0, 200);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

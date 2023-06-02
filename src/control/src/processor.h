@@ -23,7 +23,6 @@ class Processor : public QObject
         explicit Processor(QObject *parent = nullptr);
         QVideoSink *videoSink() const;
         void setVideoSink(QVideoSink *newVideoSink);
-        Q_INVOKABLE void start();
 
     signals:
         void videoSinkChanged();
@@ -33,8 +32,6 @@ class Processor : public QObject
 
     private:
         QPointer<QVideoSink> m_videoSink;
-        void handleTimeout();
-        QTimer m_timer;
 };
 
 #endif // PROCESSOR_H

@@ -22,6 +22,7 @@ Row {
         id: inputControls
         spacing: Style.intraSpacing
 
+        MountSelect { id: mountSelect }
         CameraSelect { id: cameraSelect }
         AudioInputSelect { id: audioInputSelect }
     }
