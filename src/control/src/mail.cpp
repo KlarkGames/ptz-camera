@@ -3,6 +3,7 @@
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include "src/mountdriver.h"
 
 int main(int argc, char* argv[])
 {

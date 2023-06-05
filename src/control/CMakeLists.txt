@@ -3,12 +3,14 @@ project(ptz-camera LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort)
 
 qt_add_executable(ptz-camera
     src/mail.cpp
     src/processor.h
     src/processor.cpp
+    src/mountdriver.h
+    src/mountdriver.cpp
 )
 
 set_target_properties(ptz-camera PROPERTIES
@@ -28,6 +30,7 @@ target_link_libraries(ptz-camera PUBLIC
     Qt::Multimedia
     Qt::Qml
     Qt::Quick
+    Qt::SerialPort
 )
 
 # Resources:
@@ -37,6 +40,7 @@ set(ptz-camera_resource_files
     "qml/MediaList.qml"
     "qml/AudioInputSelect.qml"
     "qml/CameraSelect.qml"
+    "qml/MountSelect.qml"
     "qml/RecordButton.qml"
     "qml/Controls.qml"
     "qml/StyleParameter.qml"
