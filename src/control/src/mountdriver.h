@@ -22,7 +22,7 @@ class MountDriver : public QObject
         void setCurrentPort(QString portName);
         QStringList availablePortNames();
         QString currentPortName();
-        Q_INVOKABLE void sendSignal(int dirPin, int stepPin, int direction, int stepCount);
+        void rotate(QVariantMap);
 
     signals:
         void currentPortChanged();
@@ -38,6 +38,7 @@ class MountDriver : public QObject
         QTimer m_timer;
         QStringList m_availablePortNames;
         QSerialPort *m_serialPort = nullptr;
+        void sendSignal(int dirPin, int stepPin, int direction, int stepCount);
 };
 
 #endif // MOUNTDRIVER_H
