@@ -50,6 +50,25 @@ QString MountDriver::currentPortName()
     return this->m_serialPort->portName();
 }
 
+void MountDriver::rotate(QVariantMap paramsMap)
+{
+    QString axis = paramsMap.value("axis").toString();
+    int direction = paramsMap.value("direction").toInt();
+    int steps = paramsMap.value("steps").toInt();
+    int dirPin, stepPin = 0;
+    if (axis == "x") {
+        dirPin = 5;
+        stepPin = 2;
+    } else if (axis == "y") {
+        dirPin = 6;
+        stepPin = 3;
+    } else {
+        qDebug() << "Wrong axis";
+        return;
+    }
+    this->sendSignal(dirPin, stepPin, direction, steps);
+}
+
 void MountDriver::handleReadyRead()
 {
     QByteArray readData;
@@ -85,6 +104,10 @@ void MountDriver::handleError(QSerialPort::SerialPortError error)
 
 void MountDriver::sendSignal(int dirPin, int stepPin, int direction, int stepCount)
 {
+    if (this->m_serialPort == nullptr) {
+        qDebug("Port is not intiated");
+        return;
+    }
     if (!this->m_serialPort->isOpen()) {
         qDebug("Port is not opened");
         return;

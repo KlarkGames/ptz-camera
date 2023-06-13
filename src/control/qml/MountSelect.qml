@@ -18,7 +18,7 @@ Row {
         width: Style.widthLong
         height: Style.height
         currentIndex: -1
-        model: mountDriver.availablePortNames
+        model: producer.mountDriver.availablePortNames
         background: StyleRectangle { anchors.fill: parent }
         displayText: typeof currentValue === 'undefined' ? "Unavailable" : currentValue.description
         font.pointSize: Style.fontSize
@@ -26,7 +26,7 @@ Row {
         onCurrentValueChanged: {
             if (comboBox.currentValue !== '') {
                 console.log('Setting port', comboBox.currentValue);
-                mountDriver.currentPortName = comboBox.currentValue;
+                producer.mountDriver.currentPortName = comboBox.currentValue;
             }
         }
     }

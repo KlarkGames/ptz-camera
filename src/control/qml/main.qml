@@ -31,10 +31,6 @@ Window {
         processorVideoSink: videoOutput.videoSink
     }
 
-    MountDriver {
-        id: mountDriver
-    }
-
     Popup {
         id: recorderError
         anchors.centerIn: Overlay.overlay
@@ -151,16 +147,32 @@ Window {
         Keys.onPressed: {
             switch (event.key) {
                 case Qt.Key_Up:
-                    mountDriver.sendSignal(6, 3, 1, 200);
+                    producer.rotateMount({
+                                           axis: "y",
+                                           direction: 1,
+                                           steps: 200
+                                       });
                     break;
                 case Qt.Key_Down:
-                    mountDriver.sendSignal(6, 3, 0, 200);
+                    producer.rotateMount({
+                                           axis: "y",
+                                           direction: 0,
+                                           steps: 200
+                                       });
                     break;
                 case Qt.Key_Left:
-                    mountDriver.sendSignal(5, 2, 1, 200);
+                    producer.rotateMount({
+                                           axis: "x",
+                                           direction: 1,
+                                           steps: 200
+                                       });
                     break;
                 case Qt.Key_Right:
-                    mountDriver.sendSignal(5, 2, 0, 200);
+                    producer.rotateMount({
+                                           axis: "x",
+                                           direction: 1,
+                                           steps: 200
+                                       });
                     break;
                 default:
                     break;

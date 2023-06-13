@@ -3,7 +3,7 @@ project(ptz-camera LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
 
 qt_add_executable(ptz-camera
     src/mail.cpp
@@ -11,6 +11,8 @@ qt_add_executable(ptz-camera
     src/processor.cpp
     src/mountdriver.h
     src/mountdriver.cpp
+    src/server.h
+    src/server.cpp
 )
 
 set_target_properties(ptz-camera PROPERTIES
@@ -31,6 +33,7 @@ target_link_libraries(ptz-camera PUBLIC
     Qt::Qml
     Qt::Quick
     Qt::SerialPort
+    Qt::WebSockets
 )
 
 # Resources:
