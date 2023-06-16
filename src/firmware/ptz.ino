@@ -54,10 +54,6 @@ int getValue(String data, int index)
 
 void rotateFunc(int stepPin) {
   digitalWrite(stepPin, HIGH);
-  delayMicroseconds(pulseWidthMicros);
-  digitalWrite(stepPin, HIGH);
-  delayMicroseconds(pulseWidthMicros);
-  digitalWrite(stepPin, LOW);
   delayMicroseconds(millisBtwnSteps);
   digitalWrite(stepPin, LOW);
   delayMicroseconds(millisBtwnSteps);
