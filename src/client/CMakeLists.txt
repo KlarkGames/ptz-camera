@@ -35,20 +35,8 @@ target_link_libraries(ptz-camera-client PUBLIC
 # Resources:
 set(ptz-camera-client_resource_files
     "qml/main.qml"
-    "qml/qmldir"
-    "qml/MediaList.qml"
-    "qml/AudioInputSelect.qml"
-    "qml/CameraSelect.qml"
-    "qml/MountSelect.qml"
-    "qml/RecordButton.qml"
-    "qml/Controls.qml"
-    "qml/StyleParameter.qml"
-    "qml/StyleRectangle.qml"
-    "qml/SettingsMetaData.qml"
-    "qml/SettingsEncoder.qml"
-    "qml/StyleSlider.qml"
     "qml/Style.qml"
-    "qml/Playback.qml"
+    "qml/qmldir"
 )
 
 qt_add_resources(ptz-camera-client "ptz-camera-client"
