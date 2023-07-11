@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(ptz-camera LANGUAGES CXX)
 
+set(FFMPEG_KIT_DIR /home/user/ffmpeg-kit/prebuilt/linux-x86_64/ffmpeg-kit)
+
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
@@ -24,6 +26,11 @@ set_target_properties(ptz-camera PROPERTIES
 target_include_directories(ptz-camera PUBLIC
     ../shared
     src
+    ${FFMPEG_KIT_DIR}/include
+)
+
+target_link_directories(ptz-camera PUBLIC
+    ${FFMPEG_KIT_DIR}/lib
 )
 
 target_link_libraries(ptz-camera PUBLIC
@@ -34,6 +41,7 @@ target_link_libraries(ptz-camera PUBLIC
     Qt::Quick
     Qt::SerialPort
     Qt::WebSockets
+    ffmpegkit
 )
 
 # Resources:
