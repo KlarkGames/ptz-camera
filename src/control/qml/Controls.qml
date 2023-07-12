@@ -14,7 +14,6 @@ Row {
     property bool capturesVisible: false
 
     property alias audioInput: audioInputSelect.selected
-    property alias camera: cameraSelect.selected
 
     spacing: Style.interSpacing * Style.ratio
 

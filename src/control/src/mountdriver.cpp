@@ -102,6 +102,21 @@ void MountDriver::handleError(QSerialPort::SerialPortError error)
              << Qt::endl;
 }
 
+void MountDriver::handleNeuralNetRequest(QPair <Direction, Direction> directions) {
+    Direction horizontal_direction = directions.first;
+    Direction vertical_direction = directions.second;
+
+    if (horizontal_direction == Direction::left)
+        this->sendSignal(5, 2, 1, 50);
+    else if (horizontal_direction == Direction::right)
+        this->sendSignal(5, 2, 0, 50);
+
+    if (vertical_direction == Direction::top)
+        this->sendSignal(6, 3, 0, 50);
+    else if (vertical_direction == Direction::bottom)
+        this->sendSignal(6, 3, 1, 50);
+}
+
 void MountDriver::sendSignal(int dirPin, int stepPin, int direction, int stepCount)
 {
     if (this->m_serialPort == nullptr) {

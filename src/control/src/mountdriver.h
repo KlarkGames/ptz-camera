@@ -9,12 +9,15 @@
 #include <QTextStream>
 #include <QStringList>
 #include <QDebug>
+#include "utils.h"
 
 class MountDriver : public QObject
 {
     Q_OBJECT
+
     Q_PROPERTY(QString currentPortName READ currentPortName WRITE setCurrentPort NOTIFY currentPortChanged)
     Q_PROPERTY(QStringList availablePortNames READ availablePortNames NOTIFY availablePortsChanged)
+
     QML_ELEMENT
 
     public:
@@ -27,6 +30,9 @@ class MountDriver : public QObject
     signals:
         void currentPortChanged();
         void availablePortsChanged();
+
+    public slots:
+        void handleNeuralNetRequest(QPair<Direction, Direction> directions);
 
     private slots:
         void handleBytesWritten(qint64 bytes);
