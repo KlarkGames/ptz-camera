@@ -26,23 +26,34 @@ Window {
         visible: !playback.playing
     }
 
+    CaptureSession {
+                id: captureSession
+                recorder: recorder
+                audioInput: controls.audioInput
+
+                videoOutput: videoOutput
+
+                camera: cameraWrapper.camera
+            }
+
+    CameraWrapper {
+        id: cameraWrapper
+        camera: Camera {
+            id: camera
+        }
+    }
+
     Processor {
         id: producer
         processorVideoSink: videoOutput.videoSink
+        mountDriver {id: mountDriver}
+        cameraWrapper: cameraWrapper
     }
 
     Popup {
         id: recorderError
         anchors.centerIn: Overlay.overlay
         Text { id: recorderErrorText }
-    }
-
-    CaptureSession {
-        id: captureSession
-        recorder: recorder
-        audioInput: controls.audioInput
-        camera: controls.camera
-        videoOutput: videoOutput
     }
 
     MediaRecorder {

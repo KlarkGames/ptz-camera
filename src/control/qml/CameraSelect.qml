@@ -8,13 +8,8 @@ import QtMultimedia
 Row {
     id: root
     height: Style.height
-    property Camera selected: available ? camera : null
     property bool available: (typeof comboBox.currentValue !== 'undefined') && cameraSwitch.checked
 
-    Camera {
-        id: camera
-        active: available && selected != null
-    }
 
     MediaDevices { id: mediaDevices }
 
@@ -33,6 +28,12 @@ Row {
         displayText: typeof currentValue === 'undefined' ? "Unavailable" : currentValue.description
         font.pointSize: Style.fontSize
         textRole: "description"
-        onCurrentValueChanged: if (typeof comboBox.currentValue !== 'undefined') camera.cameraDevice = currentValue
+
+        onActivated: {
+            if (typeof comboBox.currentValue !== 'undefined') {
+                console.log('Setting camera', comboBox.currentValue);
+                cameraWrapper.camera.cameraDevice = currentValue;
+            }
+        }
     }
 }

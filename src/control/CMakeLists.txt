@@ -4,6 +4,19 @@ project(ptz-camera LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
+find_package(OpenCV 4.5.4 REQUIRED)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/ResNet18_modified.onnx
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/yolov8s.onnx
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/yolov5n.onnx
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/coco.names
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/utils)
 
 qt_add_executable(ptz-camera
     src/mail.cpp
@@ -11,9 +24,17 @@ qt_add_executable(ptz-camera
     src/processor.cpp
     src/mountdriver.h
     src/mountdriver.cpp
+    src/camerawrapper.h
+    src/camerawrapper.cpp
     src/server.h
     src/server.cpp
+    src/targetingobject.h
+    src/targetingobject.cpp
+    src/deepsort.h
+    src/deepsort.cpp
 )
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set_target_properties(ptz-camera PROPERTIES
     WIN32_EXECUTABLE TRUE
@@ -34,6 +55,8 @@ target_link_libraries(ptz-camera PUBLIC
     Qt::Quick
     Qt::SerialPort
     Qt::WebSockets
+    Qt6::Widgets
+    ${OpenCV_LIBS}
 )
 
 # Resources:

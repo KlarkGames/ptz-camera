@@ -10,7 +10,6 @@ import com.basilevs.multimedia
 Row {
     id: root
     height: Style.height
-    property Camera selected: available ? camera : null
     property bool available: (typeof comboBox.currentValue !== 'undefined')
 
     ComboBox {
