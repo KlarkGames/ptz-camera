@@ -1,9 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(ptz-camera-client LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
+set(FFMPEG_KIT_PATH /home/user/ffmpeg-kit)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
+set(CMAKE_AUTOMOC ON)
+set(ENV{QT_MEDIA_BACKEND} "ffmpeg")
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick WebSockets)
 
 qt_add_executable(ptz-camera-client
     src/main.cpp
@@ -28,14 +31,16 @@ target_link_libraries(ptz-camera-client PUBLIC
     Qt::Multimedia
     Qt::Qml
     Qt::Quick
-    Qt::SerialPort
     Qt::WebSockets
 )
 
 # Resources:
 set(ptz-camera-client_resource_files
     "qml/main.qml"
+    "qml/ControlScreen.qml"
+    "qml/ConnectionScreen.qml"
     "qml/Style.qml"
+    "qml/RecordButton.qml"
     "qml/qmldir"
 )
 
@@ -53,8 +58,18 @@ qt6_add_qml_module(ptz-camera-client
         src/client.h
 )
 
-install(TARGETS ptz-camera-client
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+set(ANDROID_FFMPEG_EXTRAS_DIR ${FFMPEG_KIT_PATH}/prebuilt/android-${ANDROID_ABI}/ffmpeg/lib)
+
+set_property(TARGET ptz-camera-client PROPERTY QT_ANDROID_EXTRA_LIBS
+    ${ANDROID_FFMPEG_EXTRAS_DIR}/libavformat.so
+    ${ANDROID_FFMPEG_EXTRAS_DIR}/libavcodec.so
+    ${ANDROID_FFMPEG_EXTRAS_DIR}/libswresample.so
+    ${ANDROID_FFMPEG_EXTRAS_DIR}/libswscale.so
+    ${ANDROID_FFMPEG_EXTRAS_DIR}/libavutil.so
 )
+
+#install(TARGETS ptz-camera-client
+#    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
+#    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
+#    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+#)

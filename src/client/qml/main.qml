@@ -3,40 +3,40 @@ import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtMultimedia
-
-import com.basilevs.multimedia
+import QtQuick.Controls.Material
 
 Window {
     id: root
     visible: true
     title: "Client"
-    width: Style.screenWidth
+    width: 800
+    height: 450
+
+    Material.theme: Material.Light
+
+    /*width: Style.screenWidth
     height: Style.screenHeigth
 
     onWidthChanged:{
         Style.calculateRatio(root.width, root.height)
+    }*/
+
+    StackView {
+        id: stackView
+        anchors.fill: parent
+        initialItem: connectionScreenComp
+        focus: true
+        onFocusChanged: { focus = true; }
+
+        Keys.onBackPressed: {
+            stackView.pop()
+        }
     }
 
-    Client {
-        id: client
-    }
-
-    Row {
-        Button {
-            text: "L"
-            onClicked: client.sendRotateCmd(Client.DIR_LEFT)
-        }
-        Button {
-            text: "R"
-            onClicked: client.sendRotateCmd(Client.DIR_RIGHT)
-        }
-        Button {
-            text: "U"
-            onClicked: client.sendRotateCmd(Client.DIR_UP)
-        }
-        Button {
-            text: "D"
-            onClicked: client.sendRotateCmd(Client.DIR_DOWN)
+    Component {
+        id: connectionScreenComp
+        ConnectionScreen {
+            //stack: stackView
         }
     }
 }

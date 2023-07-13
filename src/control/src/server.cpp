@@ -11,7 +11,7 @@ Server::Server(QObject *parent) :
 
 void Server::initServer()
 {
-    int port = 41419;
+    int port = 41419, portStream = 5000;
     QHostAddress ipAddress;
     const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
     // use the first non-localhost IPv4 address
@@ -32,6 +32,24 @@ void Server::initServer()
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
                 this, &Server::handleConnection);
     }
+
+    m_ffmpegSession = ffmpegkit::FFmpegKit::executeAsync(
+        QString(
+            "-i /dev/video0 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -c:v libx264 -f rawvideo tcp://%1:%2?listen"
+        ).arg(ipAddress.toString()).arg(portStream).toStdString(),
+
+        [this](auto session) {
+            const auto state = session->getState();
+            auto returnCode = session->getReturnCode();
+
+            if (m_debug) {
+                qDebug() << "FFmpeg process exited with state"
+                         << ffmpegkit::FFmpegKitConfig::sessionStateToString(state)
+                         << "and rc" << returnCode->getValue();
+                qDebug() << session->getFailStackTrace();
+            }
+        }
+    );
 }
 
 void Server::handleConnection()

@@ -9,6 +9,7 @@ class Client : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(QUrl streamSource READ streamSource NOTIFY streamSourceChanged)
 public:
     enum RotateDirection{
         DIR_LEFT = 1, DIR_RIGHT = 2, DIR_UP = 3, DIR_DOWN = 4
@@ -16,7 +17,8 @@ public:
     Q_ENUM(RotateDirection)
 
     explicit Client(QObject *parent = nullptr);
-    Q_INVOKABLE void connectToHost(QUrl url);
+    QUrl streamSource();
+    Q_INVOKABLE void connectToHost(QString addr);
     Q_INVOKABLE void closeConnection();
     Q_INVOKABLE bool sendRotateCmd(RotateDirection dir, int steps = 1);
     virtual ~Client();
@@ -28,9 +30,11 @@ private slots:
 signals:
     void connected();
     void disconnected();
+    void streamSourceChanged();
 
 private:
     QWebSocket m_socket;
+    QUrl m_streamSource;
 };
 
 #endif // CLIENT_H
