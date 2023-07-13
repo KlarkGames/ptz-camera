@@ -16,7 +16,7 @@ Row {
     Switch {
         id: cameraSwitch
         anchors.verticalCenter: parent.verticalCenter
-        checked: true
+        checked: false
     }
 
     ComboBox {

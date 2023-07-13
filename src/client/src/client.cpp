@@ -10,8 +10,18 @@ Client::Client(QObject *parent)
     connect(&m_socket, &QWebSocket::disconnected, this, [this](){ emit disconnected(); });
 }
 
-void Client::connectToHost(QUrl url)
+void Client::connectToHost(QString addr)
 {
+    QUrl url = QUrl::fromUserInput(addr);
+    url.setScheme("ws");
+    if (url.port() < 0)
+        url.setPort(41419);
+
+    m_streamSource = url;
+    m_streamSource.setScheme("tcp");
+    m_streamSource.setPort(5000);
+    emit streamSourceChanged();
+
     closeConnection();
     m_socket.open(url);
 }
@@ -19,6 +29,11 @@ void Client::connectToHost(QUrl url)
 void Client::closeConnection()
 {
     return m_socket.close();
+}
+
+QUrl Client::streamSource()
+{
+    return m_streamSource;
 }
 
 void Client::afterConnected()
