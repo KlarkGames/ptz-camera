@@ -156,37 +156,68 @@ Window {
         }
 
         Keys.onPressed: {
-            switch (event.key) {
-                case Qt.Key_Up:
-                    producer.rotateMount({
-                                           axis: "y",
-                                           direction: 1,
-                                           steps: 200
-                                       });
-                    break;
-                case Qt.Key_Down:
-                    producer.rotateMount({
-                                           axis: "y",
-                                           direction: 0,
-                                           steps: 200
-                                       });
-                    break;
-                case Qt.Key_Left:
-                    producer.rotateMount({
-                                           axis: "x",
-                                           direction: 1,
-                                           steps: 200
-                                       });
-                    break;
-                case Qt.Key_Right:
-                    producer.rotateMount({
-                                           axis: "x",
-                                           direction: 1,
-                                           steps: 200
-                                       });
-                    break;
-                default:
-                    break;
+            if (!event.isAutoRepeat) {
+                switch (event.key) {
+                    case Qt.Key_Up:
+                        producer.rotateMount({
+                                               direction: "up",
+                                               command: "launch"
+                                           });
+                        break;
+                    case Qt.Key_Down:
+                        producer.rotateMount({
+                                                direction: "down",
+                                                command: "launch"
+                                           });
+                        break;
+                    case Qt.Key_Left:
+                        producer.rotateMount({
+                                                direction: "left",
+                                                command: "launch"
+                                           });
+                        break;
+                    case Qt.Key_Right:
+                        producer.rotateMount({
+                                                direction: "right",
+                                                command: "launch"
+                                           });
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        Keys.onReleased: {
+            if (!event.isAutoRepeat) {
+                switch (event.key) {
+                    case Qt.Key_Up:
+                        producer.rotateMount({
+                                               direction: "up",
+                                               command: "stop"
+                                           });
+                        break;
+                    case Qt.Key_Down:
+                        producer.rotateMount({
+                                                direction: "down",
+                                                command: "stop"
+                                           });
+                        break;
+                    case Qt.Key_Left:
+                        producer.rotateMount({
+                                                direction: "left",
+                                                command: "stop"
+                                           });
+                        break;
+                    case Qt.Key_Right:
+                        producer.rotateMount({
+                                                direction: "right",
+                                                command: "stop"
+                                           });
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
