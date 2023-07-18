@@ -16,8 +16,6 @@ bool right = false;
 bool up = false;
 bool down = false;
 
-const char separator = ':';
-int pulseWidthMicros = 100;  // microseconds
 int millisBtwnSteps = 1000;
 
 void setup() {
@@ -91,6 +89,5 @@ void loop() {
       digitalWrite(dirYPin, DOWN);
       rotateFunc(stepYPin);
     }
-    //rotate(dirPin, stepPin, (direction==0)?HIGH:LOW, steps);
   }
 }
