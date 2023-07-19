@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
 find_package(OpenCV 4.5.4 REQUIRED)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/ResNet18_modified.onnx
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/MobileNetV2_modified.onnx
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/yolov8s.onnx
@@ -30,10 +30,12 @@ qt_add_executable(ptz-camera
     src/camerawrapper.cpp
     src/server.h
     src/server.cpp
-    src/targetingobject.h
-    src/targetingobject.cpp
+    src/trackingobject.h
+    src/trackingobject.cpp
     src/deepsort.h
     src/deepsort.cpp
+    src/hungarian.h
+    src/hungarian.cpp
 )
 
 find_package(Qt6 REQUIRED COMPONENTS Widgets)

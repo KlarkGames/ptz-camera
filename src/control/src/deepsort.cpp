@@ -1,5 +1,4 @@
 #include "deepsort.h"
-#include "QDebug"
 
 
 DeepSORT::DeepSORT(const std::string &pathToYolo,
@@ -12,9 +11,6 @@ DeepSORT::DeepSORT(const std::string &pathToYolo,
     m_yolo = cv::dnn::readNet(pathToYolo);
 
     m_cnn = cv::dnn::readNet(pathToCnn);
-
-    qDebug("YOLO FLOPS: %d", (int)m_yolo.getFLOPS(cv::dnn::MatShape{1, 3, 640, 640}));
-    qDebug("CNN FLOPS: %d", (int)m_cnn.getFLOPS(cv::dnn::MatShape{1, 3, 128, 128}));
 
     loadClassNames(pathToClassNames);
 }
@@ -30,7 +26,7 @@ void DeepSORT::loadClassNames(std::string path)
     }
 }
 
-cv::Mat DeepSORT::getLayer(cv::Mat &objectImage)
+cv::Mat DeepSORT::getAppearance(cv::Mat &objectImage)
 {
     cv::Mat blob;
     cv::dnn::blobFromImage(objectImage, blob, 1./255.,
@@ -45,63 +41,92 @@ cv::Mat DeepSORT::getLayer(cv::Mat &objectImage)
     return output;
 }
 
-void DeepSORT::forward(cv::Mat &inputImage)
+std::vector<ObjectInfo> DeepSORT::forward(cv::Mat &inputImage)
 {
     std::vector<Detection> detections = detectObjects(inputImage);
+    std::vector<cv::Mat> detectionCrops(detections.size());
+    std::vector<cv::Mat> detectionAppearances(detections.size());
+    std::vector<ObjectInfo> result;
 
-    if (m_targetingObjects.empty()) {
-        foreach(Detection detection, detections) {
-            cv::Rect2i cropArea(std::max(detection.box.x, 0),
-                                std::max(detection.box.y, 0),
-                                std::min(detection.box.width, inputImage.cols - detection.box.x),
-                                std::min(detection.box.height, inputImage.rows - detection.box.y));
+    for (int j = 0; j < detections.size(); j++) {
+        cv::Rect2i cropArea(std::max(detections[j].bbox.x, 0),
+                            std::max(detections[j].bbox.y, 0),
+                            std::min(detections[j].bbox.width, inputImage.cols - detections[j].bbox.x),
+                            std::min(detections[j].bbox.height, inputImage.rows - detections[j].bbox.y));
 
-            cv::Mat objectImage = inputImage(cropArea);
-            cv::Mat objectLayer = getLayer(objectImage);
-
-            m_targetingObjects.push_back(TargetingObject(m_targetingObjectCounter++,
-                                                         detection.box,
-                                                         detection.class_id,
-                                                         objectLayer));
+        cv::Mat objectImage = inputImage(cropArea);
+        detectionAppearances[j] = getAppearance(objectImage);
+    }
+    
+    if (m_trackingObjects.empty()) {
+        for(int i = 0; i < detections.size(); i++) {
+            m_trackingObjects.push_back(TrackingObject(m_trackingObjectCounter++,
+                                                         detections[i].bbox,
+                                                         detections[i].class_id,
+                                                         detectionAppearances[i]));
         }
     } else {
-        int matrixSize = std::max(detections.size(), m_targetingObjects.size());
-
-        cv::Mat matrix(matrixSize, matrixSize, CV_32F);
-
-        for (int i = 0; i < m_targetingObjects.size(); i++) {
-            cv::Rect2i predictedBbox = m_targetingObjects[i].kalmanPredict();
+        std::vector< std::vector <double> > matrix(m_trackingObjects.size());
+        std::vector<int> assigments(m_trackingObjects.size());
+        
+        for (int i = 0; i < m_trackingObjects.size(); i++) {
+            
+            cv::Rect2i predictedBbox = m_trackingObjects[i].kalmanPredict();
+            matrix[i] = std::vector<double>(detections.size());
 
             for (int j = 0; j < detections.size(); j++) {
-                // Достать Appearance
-                cv::Rect2i cropArea(std::max(detections[j].box.x, 0),
-                                    std::max(detections[j].box.y, 0),
-                                    std::min(detections[j].box.width, inputImage.cols - detections[j].box.x),
-                                    std::min(detections[j].box.height, inputImage.rows - detections[j].box.y));
 
-                cv::Mat objectImage = inputImage(cropArea);
-                cv::Mat detectedAppearance = getLayer(objectImage);
-                //Посчитать D_a
-                float appearanceDistance = m_targetingObjects[i].cosDistance(detectedAppearance);
-
-                //Предсказать BBOX
-                //Посчтиать D_m
-                float mahalanobisDistance = m_targetingObjects[i].mahalanobis(predictedBbox, detections[j].box);
-                //Посчитать D
+                cv::Mat detectedAppearance = detectionAppearances[j];
+                
+                float appearanceDistance = m_trackingObjects[i].cosDistance(detectedAppearance);
+                
+                float mahalanobisDistance = m_trackingObjects[i].mahalanobis(predictedBbox, detections[j].bbox);
                 float distance = LAMBDA * appearanceDistance + (1 - LAMBDA) * mahalanobisDistance;
-                //Записать дистанцию в
-                qDebug("D_a: %f", appearanceDistance);
-                qDebug("D_m: %f", mahalanobisDistance);
-                qDebug("D: %f", distance);
-                //TODO continue
+                matrix[i][j] = distance;
+            }
+        }
+
+        solver.solve(matrix, assigments);
+        std::vector<bool> usedAssigments(detections.size());
+
+
+        for (int i = 0; i < assigments.size(); i++) {
+            int assigment = assigments[i];
+
+            if (assigment == -1) {
+                m_trackingObjects[i].addAge();
+                if (m_trackingObjects[i].age() == MAX_TRACKING_OBJECT_AGE) {
+                    m_trackingObjects.erase(m_trackingObjects.begin() + i);
+                }
+            } else {
+                m_trackingObjects[i].addPosition(detections[assigment].bbox);
+                m_trackingObjects[i].changeAppearance(detectionAppearances[assigment]);
+                assert(usedAssigments[assigment] != true);
+                usedAssigments[assigment] = true;
+                
+                result.push_back(ObjectInfo{.id = m_trackingObjects[i].id(),
+                                            .class_id = m_trackingObjects[i].classId(),
+                                            .className = m_class_list[m_trackingObjects[i].classId()],
+                                            .bbox = m_trackingObjects[i].bbox()});
+            }
+        }
+
+        for (int j = 0; j < detections.size(); j++) {
+            if (usedAssigments[j] != true) {
+                m_trackingObjects.push_back(TrackingObject(m_trackingObjectCounter++,
+                                                             detections[j].bbox,
+                                                             detections[j].class_id,
+                                                             detectionAppearances[j]));
             }
         }
     }
+    return result;
 }
 
 std::vector<Detection> DeepSORT::detectObjects(cv::Mat &inputImage)
 {
     cv::Mat blob;
+
     cv::dnn::blobFromImage(inputImage, blob, 1./255.,
                            cv::Size(YOLO_INPUT_WIDTH, YOLO_INPUT_HEIGHT),
                            cv::Scalar(), true, false);
@@ -141,7 +166,7 @@ std::vector<Detection> DeepSORT::detectObjects(cv::Mat &inputImage)
         {
             float *classes_scores = data+4;
 
-            cv::Mat scores(1, m_class_list.size(), CV_32FC1, classes_scores);
+            cv::Mat scores(1, m_class_list.size(), CV_32F, classes_scores);
             cv::Point class_id;
             double maxClassScore;
 
@@ -174,7 +199,7 @@ std::vector<Detection> DeepSORT::detectObjects(cv::Mat &inputImage)
             {
                 float *classes_scores = data+5;
 
-                cv::Mat scores(1, m_class_list.size(), CV_32FC1, classes_scores);
+                cv::Mat scores(1, m_class_list.size(), CV_32F, classes_scores);
                 cv::Point class_id;
                 double max_class_score;
 
@@ -215,9 +240,7 @@ std::vector<Detection> DeepSORT::detectObjects(cv::Mat &inputImage)
         Detection result;
         result.class_id = class_ids[idx];
         result.confidence = confidences[idx];
-
-        result.className = m_class_list[result.class_id];
-        result.box = boxes[idx];
+        result.bbox = boxes[idx];
 
         detections.push_back(result);
     }
