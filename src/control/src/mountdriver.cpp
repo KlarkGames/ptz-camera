@@ -52,21 +52,31 @@ QString MountDriver::currentPortName()
 
 void MountDriver::rotate(QVariantMap paramsMap)
 {
-    QString axis = paramsMap.value("axis").toString();
-    int direction = paramsMap.value("direction").toInt();
-    int steps = paramsMap.value("steps").toInt();
-    int dirPin, stepPin = 0;
-    if (axis == "x") {
-        dirPin = 5;
-        stepPin = 2;
-    } else if (axis == "y") {
-        dirPin = 6;
-        stepPin = 3;
+    QString direction = paramsMap.value("direction").toString();
+    QString command = paramsMap.value("command").toString();
+
+    QString signal = "";
+
+    if (direction == "left") {
+        signal += 'L';
+    } else if (direction == "right") {
+        signal += 'R';
+    } else if (direction == "up") {
+        signal += 'U';
+    } else if (direction == "down") {
+        signal += 'D';
     } else {
-        qDebug() << "Wrong axis";
-        return;
+        qDebug("Invalid direction. Got: " + direction.toLatin1() + ", allowed \"left\", \"right\", \"up\", \"down\"");
     }
-    this->sendSignal(dirPin, stepPin, direction, steps);
+
+    if (command == "launch") {
+        signal += 'L';
+    } else if (command == "stop") {
+        signal += 'S';
+    } else {
+        qDebug("Invalid command. Got: " + command.toLatin1() + ", allowed \"launch\", \"stop\"");
+    }
+    this->sendSignal(signal);
 }
 
 void MountDriver::handleReadyRead()
@@ -102,7 +112,22 @@ void MountDriver::handleError(QSerialPort::SerialPortError error)
              << Qt::endl;
 }
 
-void MountDriver::sendSignal(int dirPin, int stepPin, int direction, int stepCount)
+void MountDriver::handleNeuralNetRequest(QPair <Direction, Direction> directions) {
+    Direction horizontal_direction = directions.first;
+    Direction vertical_direction = directions.second;
+
+//    if (horizontal_direction == Direction::left)
+//        this->sendSignal(5, 2, 1, 50);
+//    else if (horizontal_direction == Direction::right)
+//        this->sendSignal(5, 2, 0, 50);
+
+//    if (vertical_direction == Direction::top)
+//        this->sendSignal(6, 3, 0, 50);
+//    else if (vertical_direction == Direction::bottom)
+//        this->sendSignal(6, 3, 1, 50);
+}
+
+void MountDriver::sendSignal(QString signal)
 {
     if (this->m_serialPort == nullptr) {
         qDebug("Port is not intiated");
@@ -112,11 +137,7 @@ void MountDriver::sendSignal(int dirPin, int stepPin, int direction, int stepCou
         qDebug("Port is not opened");
         return;
     }
-    QString signal = QString("%1 %2 %3 %4")
-            .arg(dirPin)
-            .arg(stepPin)
-            .arg(direction)
-            .arg(stepCount);
+
     qDebug("Sending: %s", qUtf8Printable(signal));
 
     QByteArray signalBytes = signal.toUtf8();

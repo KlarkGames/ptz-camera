@@ -37,10 +37,6 @@ QUrl Client::streamSource()
     return m_streamSource;
 }
 
-/*QDateTime Client::recStartTime()
-{
-    return QDateTime::fromMSecsSinceEpoch(m_recStartTime);
-}*/
 
 void Client::afterConnected()
 {
@@ -62,15 +58,6 @@ void Client::setIsTracking(bool value)
     m_isTracking = value;
     emit isTrackingChanged();
 }
-
-/*void Client::setRecStartTime(qint64 time)
-{
-    if (m_recStartTime == time)
-        return;
-
-    m_recStartTime = time;
-    emit recStartTimeChanged();
-}*/
 
 QTime Client::getRecElapsedTimeMSecs()
 {

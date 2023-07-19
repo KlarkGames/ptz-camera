@@ -124,6 +124,7 @@ GridLayout {
                 rows: 3
                 columns: 3
                 Layout.margins: 10
+
                 rowSpacing: 5
                 columnSpacing: 5
 
@@ -165,6 +166,7 @@ GridLayout {
                 }
 
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
+
                 Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true

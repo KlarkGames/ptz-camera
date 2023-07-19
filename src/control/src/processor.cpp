@@ -1,5 +1,6 @@
 #include "processor.h"
 
+
 Processor::Processor(QObject *parent)
     : QObject{parent}
 {
@@ -14,39 +15,123 @@ Processor::Processor(QObject *parent)
     connect(this, &Processor::trackingStatusChanged, m_server, &Server::setTrackingStatus);
 
     m_streamer->initStreaming(m_server->address(), "/dev/video0");
+
+    vertical_border = 0.7;
+    horizontal_border = 0.7;
+
+    m_cameraWrapper = new CameraWrapper();
+
+    m_timer.setInterval(1000);
+
+    m_counter = 0;
+    m_max_count = 5;
+
+    connect(
+        this,
+        &Processor::moveCameraRequest,
+        m_mountDriver,
+        &MountDriver::handleNeuralNetRequest
+    );
+
+    connect(
+        &m_timer,
+        &QTimer::timeout,
+        this,
+        &Processor::moveCamera
+    );
+
+    m_timer.start();
 }
 
-QVideoSink *Processor::videoSink() const
+/*QVideoSink *Processor::videoSink() const
 {
     return m_videoSink.get();
-}
+}*/
 
 MountDriver *Processor::mountDriver() const
 {
     return m_mountDriver.get();
 }
 
-void Processor::setVideoSink(QVideoSink *newVideoSink)
+CameraWrapper *Processor::getCameraWrapper() const
+{
+    return m_cameraWrapper.get();
+}
+
+/*void Processor::setVideoSink(QVideoSink *newVideoSink)
 {
     if (m_videoSink == newVideoSink)
         return;
     m_videoSink = newVideoSink;
     connect(newVideoSink, &QVideoSink::videoFrameChanged, this, &Processor::hvideoFrameChanged);
     emit videoSinkChanged();
-}
+}*/
 
 void Processor::rotateMount(QVariantMap paramsMap)
 {
     this->m_mountDriver->rotate(paramsMap);
 }
 
-void Processor::hvideoFrameChanged(const QVideoFrame &frame) {
-    // qDebug("Frame size: %i", frame.startTime());
+void Processor::setCameraWrapper(CameraWrapper *newCameraWrapper)
+{
+    if (m_cameraWrapper == newCameraWrapper)
+        return;
+    m_cameraWrapper = newCameraWrapper;
+    emit cameraWrapperChanged();
 }
+
+/*void Processor::hvideoFrameChanged(const QVideoFrame &frame) {
+
+    if (m_counter++ == m_max_count) {
+        m_counter = 0;
+        emit handleFrameRequest(frame);
+    }
+}*/
 
 void Processor::handleFrameWithNN(QImage frame)
 {
+    m_videoSize = frame.size();
+    cv::Mat input(m_videoSize.height(), m_videoSize.width(), CV_8UC4, frame.bits());
+    cv::cvtColor(input, input, cv::COLOR_BGRA2RGB);
 
+    std::vector<ObjectInfo> objects = m_deepSort.forward(input);
+    emit handleObjectsRequest(objects);
+}
+
+void Processor::moveCamera() {
+    if (cameraDirections.first != Direction::hold || cameraDirections.second != Direction::hold)
+        emit this->moveCameraRequest(cameraDirections);
+}
+
+QPair<Direction, Direction> Processor::getDirections(QRect bbox) {
+    //QSize frame_size = m_videoSink->videoSize();
+    QRect border(
+        int(m_videoSize.width() / 2 - m_videoSize.width() * horizontal_border / 2),
+        int(m_videoSize.height() / 2 - m_videoSize.height() * vertical_border / 2),
+        int(m_videoSize.width() * horizontal_border),
+        int(m_videoSize.height() * vertical_border)
+    );
+
+    QPoint center = bbox.center();
+
+    Direction horizontal_direction;
+    Direction vertical_direction;
+
+    if (center.x() <= border.right() && center.x() >= border.left())
+        horizontal_direction = Direction::hold;
+    else if (center.x() < border.left())
+        horizontal_direction = Direction::left;
+    else if (center.x() > border.right())
+        horizontal_direction = Direction::right;
+
+    if (center.y() >= border.top() && center.y() <= border.bottom())
+        vertical_direction = Direction::hold;
+    else if (center.y() > border.bottom())
+        vertical_direction = Direction::bottom;
+    else if (center.y() < border.top())
+        vertical_direction = Direction::top;
+
+    return QPair<Direction, Direction>(horizontal_direction, vertical_direction);
 }
 
 void Processor::setTracking(bool value)

@@ -13,7 +13,7 @@ Server::Server(QObject *parent) :
 void Server::initServer()
 {
     int port = 41419;
-    //QHostAddress ipAddress;
+
     const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
     // use the first non-localhost IPv4 address
     for (const QHostAddress &entry : ipAddressesList) {
