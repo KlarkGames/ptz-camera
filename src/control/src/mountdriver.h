@@ -44,7 +44,7 @@ class MountDriver : public QObject
         QTimer m_timer;
         QStringList m_availablePortNames;
         QSerialPort *m_serialPort = nullptr;
-        void sendSignal(int dirPin, int stepPin, int direction, int stepCount);
+        void sendSignal(QString signal);
 };
 
 #endif // MOUNTDRIVER_H
