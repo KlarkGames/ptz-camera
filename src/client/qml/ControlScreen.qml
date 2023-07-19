@@ -17,8 +17,14 @@ GridLayout {
     Client {
         id: client
         Component.onCompleted: {
-            console.debug(1, ipAddress)
             client.connectToHost(ipAddress)
+        }
+
+        onIsRecordingChanged: {
+            elapsedTime.upd()
+        }
+
+        onConnected: {
             videoItem.source = client.streamSource
             videoItem.play()
         }
@@ -30,6 +36,26 @@ GridLayout {
         Layout.fillHeight: true
         Layout.preferredHeight: 5
         Layout.preferredWidth: 5
+
+        Repeater {
+            model: client.isTracking ? client.trackingObjectModel : 0
+            delegate: Rectangle {
+                x: model.rect.x
+                y: model.rect.y
+                width: model.rect.width
+                height: model.rect.height
+                color: "transparent"
+                border.color: "red"
+                border.width: 3
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        console.debug(model.objectId, model.className)
+                    }
+                }
+            }
+        }
     }
 
     Rectangle {
@@ -62,14 +88,32 @@ GridLayout {
 
                 Row {
                     RecordButton {
-
+                        onClicked: {
+                            client.sendSetRecordingCmd(!client.isRecording);
+                        }
                     }
 
                     Label {
+                        function upd(time) {
+                            text = Qt.formatTime(client.getRecElapsedTimeMSecs(), "hh:mm:ss.zzz")
+                        }
+
+                        Component.onCompleted: { upd() }
+
+                        id: elapsedTime
                         leftPadding: 10
                         height: parent.height
                         verticalAlignment: Text.AlignVCenter
-                        text: "0:00.0"
+
+                        Timer {
+                            interval: 100
+                            repeat: true
+                            triggeredOnStart: true
+                            running: client.isRecording
+                            onTriggered: {
+                                elapsedTime.upd()
+                            }
+                        }
                     }
                 }
             }
@@ -80,37 +124,51 @@ GridLayout {
                 rows: 3
                 columns: 3
                 Layout.margins: 10
-                rowSpacing: 0
-                columnSpacing: 0
+                rowSpacing: 5
+                columnSpacing: 5
 
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
-                RoundButton {
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: "^"
                     onClicked: client.sendRotateCmd(Client.DIR_UP)
                 }
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
 
-                RoundButton {
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: "<"
                     onClicked: client.sendRotateCmd(Client.DIR_LEFT)
                 }
-                Item { Layout.fillWidth: true; Layout.fillHeight: true }
 
-                RoundButton {
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    checked: client.isTracking
+                    text: "AI"
+
+                    onClicked: {
+                        client.sendSetTrackingCmd(!client.isTracking)
+                    }
+                }
+
+                Button {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: ">"
                     onClicked: client.sendRotateCmd(Client.DIR_RIGHT)
                 }
 
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
-                RoundButton {
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: "v"
                     onClicked: client.sendRotateCmd(Client.DIR_DOWN)
                 }

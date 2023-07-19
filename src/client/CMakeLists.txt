@@ -12,6 +12,8 @@ qt_add_executable(ptz-camera-client
     src/main.cpp
     src/client.h
     src/client.cpp
+    src/trackingobjectmodel.h
+    src/trackingobjectmodel.cpp
 )
 
 set_target_properties(ptz-camera-client PROPERTIES
@@ -42,6 +44,7 @@ set(ptz-camera-client_resource_files
     "qml/Style.qml"
     "qml/RecordButton.qml"
     "qml/qmldir"
+    "res/logo.png"
 )
 
 qt_add_resources(ptz-camera-client "ptz-camera-client"
@@ -67,9 +70,3 @@ set_property(TARGET ptz-camera-client PROPERTY QT_ANDROID_EXTRA_LIBS
     ${ANDROID_FFMPEG_EXTRAS_DIR}/libswscale.so
     ${ANDROID_FFMPEG_EXTRAS_DIR}/libavutil.so
 )
-
-#install(TARGETS ptz-camera-client
-#    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-#    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-#    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
-#)

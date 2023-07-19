@@ -15,6 +15,7 @@
 
 #include "server.h"
 #include "mountdriver.h"
+#include "streamer.h"
 
 class Processor : public QObject
 {
@@ -29,8 +30,11 @@ class Processor : public QObject
         MountDriver *mountDriver() const;
         void setVideoSink(QVideoSink *newVideoSink);
         Q_INVOKABLE void rotateMount(QVariantMap);
+        void setTracking(bool value);
+        void handleFrameWithNN(QImage frame);
 
     signals:
+        void trackingStatusChanged(bool value);
         void videoSinkChanged();
         void mountDriverChanged();
 
@@ -40,7 +44,9 @@ class Processor : public QObject
     private:
         QPointer<QVideoSink> m_videoSink;
         QPointer<MountDriver> m_mountDriver;
+        QPointer<Streamer> m_streamer;
         QPointer<Server> m_server;
+        bool m_isTracking = false;
 };
 
 #endif // PROCESSOR_H

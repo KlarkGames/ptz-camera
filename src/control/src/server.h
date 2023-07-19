@@ -6,8 +6,6 @@
 #include <QIODevice>
 #include <QtWebSockets>
 #include <QtCore>
-#include <FFmpegKit.h>
-#include <FFmpegKitConfig.h>
 
 class Server : public QObject
 {
@@ -15,19 +13,26 @@ class Server : public QObject
 
     public:
         explicit Server(QObject *parent = nullptr);
+        void setRecordingStatus(bool value, qint64 time);
+        void setTrackingStatus(bool value);
+        QHostAddress address();
 
     signals:
         void dataReceived(QByteArray);
-        void rotateCmdRecieved(QVariantMap);
+        void rotateCmdReceived(QVariantMap);
+        void setRecordingCmdReceived(bool value);
+        void setTrackingCmdReceived(bool value);
 
     private:
         void initServer();
 
         bool m_debug = true;
+        bool m_isRecording = false, m_isTracking = false;
+        QHostAddress m_address;
+        qint64 m_recStartTime;
         QWebSocketServer *m_pWebSocketServer;
         QList<QWebSocket *> m_clients;
         QMetaObject::Connection m_newClientHandler;
-        std::shared_ptr<ffmpegkit::FFmpegSession> m_ffmpegSession;
 
     private slots:
         void handleConnection();

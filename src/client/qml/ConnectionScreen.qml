@@ -6,8 +6,6 @@ import QtMultimedia
 import QtQuick.Controls.Material
 
 ColumnLayout {
-    property var stack : undefined
-
     Item { Layout.fillHeight: true }
 
     RowLayout {
@@ -21,7 +19,6 @@ ColumnLayout {
             id: btnConnect
             text: qsTr("Connect")
             onClicked: {
-                console.debug(ipAddrTextField.text)
                 stackView.push(controlScreenComp, {"ipAddress" : ipAddrTextField.text})
             }
         }

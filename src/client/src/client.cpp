@@ -1,5 +1,6 @@
 #include "client.h"
 #include <QJsonObject>
+#include <QHash>
 
 Client::Client(QObject *parent)
     : QObject{parent}
@@ -36,14 +37,85 @@ QUrl Client::streamSource()
     return m_streamSource;
 }
 
+/*QDateTime Client::recStartTime()
+{
+    return QDateTime::fromMSecsSinceEpoch(m_recStartTime);
+}*/
+
 void Client::afterConnected()
 {
     emit connected();
 }
 
+void Client::setIsRecording(bool value)
+{
+    if (m_isRecording == value)
+        return;
+    m_isRecording = value;
+    emit isRecordingChanged();
+}
+
+void Client::setIsTracking(bool value)
+{
+    if (m_isTracking == value)
+        return;
+    m_isTracking = value;
+    emit isTrackingChanged();
+}
+
+/*void Client::setRecStartTime(qint64 time)
+{
+    if (m_recStartTime == time)
+        return;
+
+    m_recStartTime = time;
+    emit recStartTimeChanged();
+}*/
+
+QTime Client::getRecElapsedTimeMSecs()
+{
+    if (!m_isRecording)
+        return QTime(0, 0);
+
+    return QTime::fromMSecsSinceStartOfDay(QDateTime::currentMSecsSinceEpoch() - m_recStartTime);
+}
+
 void Client::handleReceivedMessage(QStringView msg)
 {
     qDebug() << "Received:" << msg;
+
+    QJsonDocument doc = QJsonDocument::fromJson(msg.toUtf8());
+    QJsonObject obj = doc.object();
+
+    if (obj["event"].toString() == "init") {
+        setIsRecording(obj["isRecording"].toBool());
+        if (obj.contains("recStartTime"))
+            m_recStartTime = obj["recStartTime"].toString().toLongLong();
+        setIsTracking(obj["isTracking"].toBool());
+    }
+    else if (obj["event"].toString() == "recordingStatusChanged") {
+        setIsRecording(obj["value"].toBool());
+        if (m_isRecording)
+            m_recStartTime = obj["time"].toString().toLongLong();
+    }
+    else if (obj["event"].toString() == "trackingStatusChanged") {
+        setIsTracking(obj["value"].toBool());
+    }
+}
+
+bool Client::isRecording()
+{
+    return m_isRecording;
+}
+
+bool Client::isTracking()
+{
+    return m_isTracking;
+}
+
+TrackingObjectModel* Client::trackingObjectModel()
+{
+    return &m_trackingObjectModel;
 }
 
 bool Client::sendRotateCmd(RotateDirection dir, int steps)
@@ -66,6 +138,32 @@ bool Client::sendRotateCmd(RotateDirection dir, int steps)
     params["steps"] = steps;
 
     cmd["method"] = "rotate";
+    cmd["params"] = params;
+
+    QString cmdMsg = QJsonDocument(cmd).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(cmdMsg) >= cmdMsg.size();
+}
+
+bool Client::sendSetRecordingCmd(bool value)
+{
+    QJsonObject cmd, params;
+
+    params["value"] = value;
+
+    cmd["method"] = "setRecording";
+    cmd["params"] = params;
+
+    QString cmdMsg = QJsonDocument(cmd).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(cmdMsg) >= cmdMsg.size();
+}
+
+bool Client::sendSetTrackingCmd(bool value)
+{
+    QJsonObject cmd, params;
+
+    params["value"] = value;
+
+    cmd["method"] = "setTracking";
     cmd["params"] = params;
 
     QString cmdMsg = QJsonDocument(cmd).toJson(QJsonDocument::Compact);
