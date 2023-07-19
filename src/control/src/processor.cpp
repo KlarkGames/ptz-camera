@@ -1,5 +1,6 @@
 #include "processor.h"
 
+
 Processor::Processor(QObject *parent)
     : QObject{parent}
 {
@@ -91,9 +92,6 @@ void Processor::hvideoFrameChanged(const QVideoFrame &frame) {
 
 void Processor::handleFrameWithNN(const QVideoFrame &frame)
 {
-    int plane = 0;
-    QImage::Format image_format = QVideoFrameFormat::imageFormatFromPixelFormat(frame.pixelFormat());
-
     auto m_tmpVideoFrame = m_videoSink->videoFrame();
 
     auto handleType = m_tmpVideoFrame.handleType();
@@ -106,31 +104,18 @@ void Processor::handleFrameWithNN(const QVideoFrame &frame)
             cv::Mat input(img.height(), img.width(), CV_8UC4, img.bits());
             cv::cvtColor(input, input, cv::COLOR_BGRA2RGB);
 
-            m_deepSort.forward(input);
-
-            QPainter painter(&img);
-
-//            foreach (Detection detection, detections) {
-//                cv::Rect2i bbox = detection.box;
-//                painter.drawRect(bbox.x, bbox.y, bbox.width, bbox.height);
-//                cv::rectangle(input, cv::Rect_<int>(bbox.x, bbox.y, bbox.width, bbox.height), cv::Scalar(225, 225, 0), 10);
-//            }
-
-            cv::imshow("Test window", input);
-
-            painter.end();
+            std::vector<ObjectInfo> objects = m_deepSort.forward(input);
+            emit handleObjectsRequest(objects);
         }
     }
 }
 
 void Processor::moveCamera() {
-    this->cameraDirections = this->getDirections();
     if (cameraDirections.first != Direction::hold || cameraDirections.second != Direction::hold)
         emit this->moveCameraRequest(cameraDirections);
 }
 
-QPair<Direction, Direction> Processor::getDirections() {
-    cv::Rect2i bbox = m_bbox;
+QPair<Direction, Direction> Processor::getDirections(QRect bbox) {
     QSize frame_size = m_videoSink->videoSize();
     QRect border(
         int(frame_size.width() / 2 - frame_size.width() * horizontal_border / 2),
@@ -139,7 +124,7 @@ QPair<Direction, Direction> Processor::getDirections() {
         int(frame_size.height() * vertical_border)
         );
 
-    QPoint center(bbox.x + bbox.width / 2, bbox.y + bbox.height / 2);
+    QPoint center = bbox.center();
 
     Direction horizontal_direction;
     Direction vertical_direction;

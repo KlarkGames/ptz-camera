@@ -16,7 +16,6 @@
 #include <opencv2/imgproc.hpp>
 #include <QImageWriter>
 #include <QCamera>
-#include "mountdriver.h"
 #include "camerawrapper.h"
 
 #include "server.h"
@@ -39,7 +38,7 @@ class Processor : public QObject
         void setVideoSink(QVideoSink *newVideoSink);
         void setCameraWrapper(CameraWrapper *newCameraWrapper);
         void setCamera(QString cameraName);
-        QPair<Direction, Direction> getDirections();
+        QPair<Direction, Direction> getDirections(QRect bbox);
         Q_INVOKABLE void rotateMount(QVariantMap);
 
 
@@ -49,6 +48,7 @@ class Processor : public QObject
         void mountDriverChanged();
         void moveCameraRequest(QPair<Direction, Direction> cameraDirections);
         void handleFrameRequest(const QVideoFrame &frame);
+        void handleObjectsRequest(std::vector<ObjectInfo> objects);
 
     public slots:
         void hvideoFrameChanged(const QVideoFrame &frame);
@@ -66,7 +66,6 @@ class Processor : public QObject
         QTimer m_timer;
 
         DeepSORT m_deepSort;
-        cv::Rect2i m_bbox; //Temporary veriable, must be deleted
 
         float vertical_border;
         float horizontal_border;
