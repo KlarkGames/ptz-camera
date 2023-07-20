@@ -1,5 +1,4 @@
 #include "server.h"
-#include <QJsonObject>
 
 Server::Server(QObject *parent) :
     QObject(parent),
@@ -148,4 +147,35 @@ void Server::handleCommand(QJsonDocument doc)
     } else if (command == "setTracking") {
         emit setTrackingCmdReceived(params.value("value").toBool());
     }
+}
+
+void Server::handleObjectsRequest(std::vector<DeepSORT::ObjectInfo> objects)
+{
+    QJsonObject msg, params;
+    QJsonArray objArray;
+
+    for (const auto& obj : objects) {
+        QJsonObject data;
+
+        data["objectId"] = obj.id;
+        data["className"] = QString::fromStdString(obj.className);
+        data["rect"] = QJsonObject{
+            {"x", obj.bbox.x},
+            {"y", obj.bbox.y},
+            {"width", obj.bbox.width},
+            {"height", obj.bbox.height}
+        };
+
+        objArray.append(data);
+    }
+
+    params["objects"] = objArray;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "updTrackingObjects";
+    msg["params"] = params;
+
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+
+    for (auto *client : m_clients)
+        client->sendTextMessage(msg_s);
 }

@@ -9,24 +9,24 @@
 #include "hungarian.h"
 #include <assert.h>
 
-struct Detection
-{
-    int class_id{};
-    float confidence{0.0};
-    cv::Rect bbox{};
-};
-
-struct ObjectInfo
-{
-    int id {-1};
-    int class_id{};
-    std::string className{};
-    cv::Rect2i bbox{};
-};
-
 class DeepSORT
 {
 public:
+    struct Detection
+    {
+        int class_id{};
+        float confidence{0.0};
+        cv::Rect bbox{};
+    };
+
+    struct ObjectInfo
+    {
+        int id {-1};
+        int class_id{};
+        std::string className{};
+        cv::Rect2i bbox{};
+    };
+
     DeepSORT(const std::string &pathToYolo = "./models/yolov5n.onnx",
              const std::string &pathToClassNames = "./utils/coco.names",
              const std::string &pathToCnn = "./models/MobileNetV2_modified.onnx");

@@ -14,12 +14,15 @@ ColumnLayout {
             Layout.margins: 5
             Layout.fillWidth: true
             placeholderText: qsTr("IP address")
+            onAccepted: {
+                stackView.push(controlScreenComp, {"ipAddress" : ipAddrTextField.text})
+            }
         }
         Button {
             id: btnConnect
             text: qsTr("Connect")
             onClicked: {
-                stackView.push(controlScreenComp, {"ipAddress" : ipAddrTextField.text})
+                ipAddrTextField.accepted()
             }
         }
     }

@@ -41,7 +41,7 @@ cv::Mat DeepSORT::getAppearance(cv::Mat &objectImage)
     return output;
 }
 
-std::vector<ObjectInfo> DeepSORT::forward(cv::Mat &inputImage)
+std::vector<DeepSORT::ObjectInfo> DeepSORT::forward(cv::Mat &inputImage)
 {
     std::vector<Detection> detections = detectObjects(inputImage);
     std::vector<cv::Mat> detectionCrops(detections.size());
@@ -123,7 +123,7 @@ std::vector<ObjectInfo> DeepSORT::forward(cv::Mat &inputImage)
     return result;
 }
 
-std::vector<Detection> DeepSORT::detectObjects(cv::Mat &inputImage)
+std::vector<DeepSORT::Detection> DeepSORT::detectObjects(cv::Mat &inputImage)
 {
     cv::Mat blob;
 

@@ -72,8 +72,8 @@ void Processor::handleFrameWithNN(QImage frame)
     cv::Mat input(m_videoSize.height(), m_videoSize.width(), CV_8UC4, frame.bits());
     cv::cvtColor(input, input, cv::COLOR_BGRA2RGB);
 
-    std::vector<ObjectInfo> objects = m_deepSort->forward(input);
-    emit handleObjectsRequest(objects);
+    std::vector<DeepSORT::ObjectInfo> objects = m_deepSort->forward(input);
+    m_server->handleObjectsRequest(objects);
 }
 
 void Processor::moveCamera() {

@@ -91,6 +91,30 @@ void Client::handleReceivedMessage(QStringView msg_s)
     else if (method == "updTracking") {
         setIsTracking(params.value("value").toBool());
     }
+    else if (method == "updTrackingObjects") {
+        QHash<int, TrackingObjectModel::Data> objects;
+        QJsonArray objArray = params["objects"].toArray();
+
+        for (QJsonValueConstRef val : objArray) {
+            QJsonObject obj = val.toObject();
+            TrackingObjectModel::Data data;
+
+            data.objectId = obj.value("objectId").toInt();
+            data.className = obj.value("className").toString();
+
+            QJsonObject rect = obj.value("rect").toObject();
+            data.rect = QRect(
+                rect.value("x").toInt(),
+                rect.value("y").toInt(),
+                rect.value("width").toInt(),
+                rect.value("height").toInt()
+            );
+
+            objects.insert(data.objectId, data);
+        }
+
+        m_trackingObjectModel.updateData(objects);
+    }
 }
 
 bool Client::isRecording()

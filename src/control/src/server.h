@@ -6,6 +6,10 @@
 #include <QIODevice>
 #include <QtWebSockets>
 #include <QtCore>
+#include <QJsonObject>
+#include <QJsonArray>
+
+#include "deepsort.h"
 
 class Server : public QObject
 {
@@ -15,6 +19,7 @@ class Server : public QObject
         explicit Server(QObject *parent = nullptr);
         void setRecordingStatus(bool value, qint64 time);
         void setTrackingStatus(bool value);
+        void handleObjectsRequest(std::vector<DeepSORT::ObjectInfo> objects);
         QHostAddress address();
 
     signals:

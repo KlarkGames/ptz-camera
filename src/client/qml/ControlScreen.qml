@@ -25,12 +25,17 @@ GridLayout {
         }
 
         onConnected: {
-            videoItem.source = client.streamSource
-            videoItem.play()
+            mediaPlayer.source = client.streamSource
+            mediaPlayer.play()
         }
     }
 
-    Video {
+    MediaPlayer {
+        id: mediaPlayer
+        videoOutput: videoItem
+    }
+
+    VideoOutput {
         id: videoItem
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -40,10 +45,18 @@ GridLayout {
         Repeater {
             model: client.isTracking ? client.trackingObjectModel : 0
             delegate: Rectangle {
-                x: model.rect.x
-                y: model.rect.y
-                width: model.rect.width
-                height: model.rect.height
+                Text {
+                    color: "red"
+                    font.pixelSize: 12
+                    text: model.className
+                    x: 0
+                    y: -15
+                }
+
+                x: model.rect.x / videoItem.sourceRect.width * videoItem.contentRect.width + videoItem.contentRect.x
+                y: model.rect.y / videoItem.sourceRect.height * videoItem.contentRect.height + videoItem.contentRect.y
+                width: model.rect.width / videoItem.sourceRect.width * videoItem.contentRect.width
+                height: model.rect.height / videoItem.sourceRect.height * videoItem.contentRect.height
                 color: "transparent"
                 border.color: "red"
                 border.width: 3

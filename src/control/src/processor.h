@@ -48,7 +48,6 @@ class Processor : public QObject
         void cameraWrapperChanged();
         void mountDriverChanged();
         void moveCameraRequest(QPair<Direction, Direction> cameraDirections);
-        void handleObjectsRequest(std::vector<ObjectInfo> objects);
 
     public slots:
         void moveCamera();
