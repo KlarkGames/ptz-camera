@@ -17,7 +17,7 @@ bool Streamer::initStreaming(QHostAddress address, QString cameraDevice)
          tee name=t1 ! queue max-size-buffers=1000 leaky=downstream ! tcpserversink host=%2 port=%3 async=false t1. ! \
          queue max-size-buffers=1000 leaky=downstream ! mpegtsmux ! filesink async=false location=/dev/null name=filesink0"
     ).arg(cameraDevice, address.toString(), QString::number(PORT));
-    qDebug() << cmd;
+
     m_pipeline = gst_parse_launch(cmd.toUtf8().constData(), &err);
 
     if (err) {

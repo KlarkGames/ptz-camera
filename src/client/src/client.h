@@ -18,7 +18,7 @@ class Client : public QObject
     Q_PROPERTY(bool isTracking READ isTracking NOTIFY isTrackingChanged)
 public:
     enum RotateDirection{
-        DIR_LEFT = 1, DIR_RIGHT = 2, DIR_UP = 3, DIR_DOWN = 4
+        DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN
     };
     Q_ENUM(RotateDirection)
 
@@ -32,14 +32,14 @@ public:
 
     Q_INVOKABLE void connectToHost(QString addr);
     Q_INVOKABLE void closeConnection();
-    Q_INVOKABLE bool sendRotateCmd(RotateDirection dir, int steps = 1);
+    Q_INVOKABLE bool sendRotateCmd(RotateDirection dir, bool launch);
     Q_INVOKABLE bool sendSetRecordingCmd(bool value);
     Q_INVOKABLE bool sendSetTrackingCmd(bool value);
     virtual ~Client();
 
 private slots:
     void afterConnected();
-    void handleReceivedMessage(QStringView msg);
+    void handleReceivedMessage(QStringView msg_s);
 
 signals:
     void connected();

@@ -47,12 +47,15 @@ void Server::handleConnection()
     connect(pSocket, &QWebSocket::textMessageReceived, this, &Server::processTextMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &Server::socketDisconnected);
 
-    QJsonObject msg;
-    msg["event"] = "init";
-    msg["isRecording"] = m_isRecording;
+    QJsonObject msg, params;
+
+    params["isRecording"] = m_isRecording;
     if (m_isRecording)
-        msg["recStartTime"] = QString::number(m_recStartTime);
-    msg["isTracking"] = m_isTracking;
+        params["recStartTime"] = QString::number(m_recStartTime);
+    params["isTracking"] = m_isTracking;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "init";
+    msg["params"] = params;
     QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
 
     pSocket->sendTextMessage(msg_s);
@@ -101,10 +104,12 @@ void Server::setRecordingStatus(bool value, qint64 time)
     if (value)
         m_recStartTime = time;
 
-    QJsonObject msg;
-    msg["event"] = "recordingStatusChanged";
-    msg["value"] = value;
-    msg["time"] = QString::number(time);
+    QJsonObject msg, params;
+    params["value"] = value;
+    params["time"] = QString::number(time);
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "updRecording";
+    msg["params"] = params;
     QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
 
     for (auto *client : m_clients)
@@ -118,9 +123,11 @@ void Server::setTrackingStatus(bool value)
 
     m_isTracking = value;
 
-    QJsonObject msg;
-    msg["event"] = "trackingStatusChanged";
-    msg["value"] = value;
+    QJsonObject msg, params;
+    params["value"] = value;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "updTracking";
+    msg["params"] = params;
     QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
 
     for (auto *client : m_clients)
@@ -129,17 +136,16 @@ void Server::setTrackingStatus(bool value)
 
 void Server::handleCommand(QJsonDocument doc)
 {
-    QJsonObject jObject = doc.object();
-    QVariantMap mainMap = jObject.toVariantMap();
-    QString protocol = mainMap.value("jsonrpc").toString();
-    QString command = mainMap.value("method").toString();
-    QVariantMap paramsMap = mainMap.value("params").toMap();
+    QJsonObject msg = doc.object();
+
+    QString command = msg.value("method").toString();
+    QJsonObject params = msg.value("params").toObject();
+
     if (command == "rotate") {
-        emit rotateCmdReceived(paramsMap);
+        emit rotateCmdReceived(params);
     } else if (command == "setRecording") {
-        emit setRecordingCmdReceived(paramsMap.value("value").toBool());
+        emit setRecordingCmdReceived(params.value("value").toBool());
     } else if (command == "setTracking") {
-        emit setTrackingCmdReceived(paramsMap.value("value").toBool());
-        //setTrackingStatus(paramsMap.value("value").toBool());
+        emit setTrackingCmdReceived(params.value("value").toBool());
     }
 }

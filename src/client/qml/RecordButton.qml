@@ -10,9 +10,9 @@ Item {
     width: outerRadius * 2
     height: outerRadius * 2
 
-    /*required*/ property bool recording
+    property bool recording: false
 
-    property int outerRadius: 25 //Style.height
+    property int outerRadius: 25
     property int innerRadius: mouse.pressedButtons === Qt.LeftButton ? outerRadius - 6 : outerRadius - 5
 
     signal clicked

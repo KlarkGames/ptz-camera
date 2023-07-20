@@ -14,13 +14,6 @@ Window {
 
     Material.theme: Material.Light
 
-    /*width: Style.screenWidth
-    height: Style.screenHeigth
-
-    onWidthChanged:{
-        Style.calculateRatio(root.width, root.height)
-    }*/
-
     StackView {
         id: stackView
         anchors.fill: parent

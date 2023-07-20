@@ -88,6 +88,7 @@ GridLayout {
 
                 Row {
                     RecordButton {
+                        recording: client.isRecording
                         onClicked: {
                             client.sendSetRecordingCmd(!client.isRecording);
                         }
@@ -106,7 +107,7 @@ GridLayout {
                         verticalAlignment: Text.AlignVCenter
 
                         Timer {
-                            interval: 100
+                            interval: 97
                             repeat: true
                             triggeredOnStart: true
                             running: client.isRecording
@@ -134,7 +135,8 @@ GridLayout {
                     Layout.fillHeight: true
                     enabled: !client.isTracking
                     text: "^"
-                    onClicked: client.sendRotateCmd(Client.DIR_UP)
+                    onPressed: client.sendRotateCmd(Client.DIR_UP, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_UP, false)
                 }
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
 
@@ -143,7 +145,8 @@ GridLayout {
                     Layout.fillHeight: true
                     enabled: !client.isTracking
                     text: "<"
-                    onClicked: client.sendRotateCmd(Client.DIR_LEFT)
+                    onPressed: client.sendRotateCmd(Client.DIR_LEFT, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_LEFT, false)
                 }
 
                 Button {
@@ -151,10 +154,7 @@ GridLayout {
                     Layout.fillHeight: true
                     checked: client.isTracking
                     text: "AI"
-
-                    onClicked: {
-                        client.sendSetTrackingCmd(!client.isTracking)
-                    }
+                    onClicked: client.sendSetTrackingCmd(!client.isTracking)
                 }
 
                 Button {
@@ -162,7 +162,8 @@ GridLayout {
                     Layout.fillHeight: true
                     enabled: !client.isTracking
                     text: ">"
-                    onClicked: client.sendRotateCmd(Client.DIR_RIGHT)
+                    onPressed: client.sendRotateCmd(Client.DIR_RIGHT, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_RIGHT, false)
                 }
 
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
@@ -172,7 +173,8 @@ GridLayout {
                     Layout.fillHeight: true
                     enabled: !client.isTracking
                     text: "v"
-                    onClicked: client.sendRotateCmd(Client.DIR_DOWN)
+                    onPressed: client.sendRotateCmd(Client.DIR_DOWN, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_DOWN, false)
                 }
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
             }

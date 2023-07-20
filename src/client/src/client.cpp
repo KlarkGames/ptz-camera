@@ -67,26 +67,29 @@ QTime Client::getRecElapsedTimeMSecs()
     return QTime::fromMSecsSinceStartOfDay(QDateTime::currentMSecsSinceEpoch() - m_recStartTime);
 }
 
-void Client::handleReceivedMessage(QStringView msg)
+void Client::handleReceivedMessage(QStringView msg_s)
 {
-    qDebug() << "Received:" << msg;
+    qDebug() << "Received:" << msg_s;
 
-    QJsonDocument doc = QJsonDocument::fromJson(msg.toUtf8());
-    QJsonObject obj = doc.object();
+    QJsonDocument doc = QJsonDocument::fromJson(msg_s.toUtf8());
+    QJsonObject msg = doc.object();
 
-    if (obj["event"].toString() == "init") {
-        setIsRecording(obj["isRecording"].toBool());
-        if (obj.contains("recStartTime"))
-            m_recStartTime = obj["recStartTime"].toString().toLongLong();
-        setIsTracking(obj["isTracking"].toBool());
+    QString method = msg.value("method").toString();
+    QJsonObject params = msg.value("params").toObject();
+
+    if (method == "init") {
+        setIsRecording(params.value("isRecording").toBool());
+        if (params.contains("recStartTime"))
+            m_recStartTime = params.value("recStartTime").toString().toLongLong();
+        setIsTracking(params.value("isTracking").toBool());
     }
-    else if (obj["event"].toString() == "recordingStatusChanged") {
-        setIsRecording(obj["value"].toBool());
+    else if (method == "updRecording") {
+        setIsRecording(params.value("value").toBool());
         if (m_isRecording)
-            m_recStartTime = obj["time"].toString().toLongLong();
+            m_recStartTime = params.value("time").toString().toLongLong();
     }
-    else if (obj["event"].toString() == "trackingStatusChanged") {
-        setIsTracking(obj["value"].toBool());
+    else if (method == "updTracking") {
+        setIsTracking(params.value("value").toBool());
     }
 }
 
@@ -105,56 +108,54 @@ TrackingObjectModel* Client::trackingObjectModel()
     return &m_trackingObjectModel;
 }
 
-bool Client::sendRotateCmd(RotateDirection dir, int steps)
+bool Client::sendRotateCmd(RotateDirection dir, bool launch)
 {
-    QJsonObject cmd, params;
-    switch (dir) {
-    case DIR_LEFT:
-    case DIR_RIGHT:
-        params["axis"] = "x";
-        break;
-    case DIR_UP:
-    case DIR_DOWN:
-        params["axis"] = "y";
-        break;
-    default:
-        return false;
-    }
+    static const QHash<RotateDirection, QString> DIRS{
+        {DIR_LEFT, "left"},
+        {DIR_RIGHT, "right"},
+        {DIR_UP, "up"},
+        {DIR_DOWN, "down"}
+    };
 
-    params["direction"] = (int)dir;
-    params["steps"] = steps;
+    QJsonObject msg, params;
 
-    cmd["method"] = "rotate";
-    cmd["params"] = params;
+    params["direction"] = DIRS.value(dir);
+    params["command"] = launch ? "launch" : "stop";
 
-    QString cmdMsg = QJsonDocument(cmd).toJson(QJsonDocument::Compact);
-    return m_socket.sendTextMessage(cmdMsg) >= cmdMsg.size();
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "rotate";
+    msg["params"] = params;
+
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(msg_s) >= msg_s.size();
 }
 
 bool Client::sendSetRecordingCmd(bool value)
 {
-    QJsonObject cmd, params;
+    QJsonObject msg, params;
 
     params["value"] = value;
 
-    cmd["method"] = "setRecording";
-    cmd["params"] = params;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "setRecording";
+    msg["params"] = params;
 
-    QString cmdMsg = QJsonDocument(cmd).toJson(QJsonDocument::Compact);
-    return m_socket.sendTextMessage(cmdMsg) >= cmdMsg.size();
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(msg_s) >= msg_s.size();
 }
 
 bool Client::sendSetTrackingCmd(bool value)
 {
-    QJsonObject cmd, params;
+    QJsonObject msg, params;
 
     params["value"] = value;
 
-    cmd["method"] = "setTracking";
-    cmd["params"] = params;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "setTracking";
+    msg["params"] = params;
 
-    QString cmdMsg = QJsonDocument(cmd).toJson(QJsonDocument::Compact);
-    return m_socket.sendTextMessage(cmdMsg) >= cmdMsg.size();
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(msg_s) >= msg_s.size();
 }
 
 Client::~Client()

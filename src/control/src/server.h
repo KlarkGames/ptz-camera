@@ -19,7 +19,7 @@ class Server : public QObject
 
     signals:
         void dataReceived(QByteArray);
-        void rotateCmdReceived(QVariantMap);
+        void rotateCmdReceived(QJsonObject);
         void setRecordingCmdReceived(bool value);
         void setTrackingCmdReceived(bool value);
 
@@ -31,8 +31,7 @@ class Server : public QObject
         QHostAddress m_address;
         qint64 m_recStartTime;
         QWebSocketServer *m_pWebSocketServer;
-        QList<QWebSocket *> m_clients;
-        QMetaObject::Connection m_newClientHandler;
+        QList<QWebSocket*> m_clients;
 
     private slots:
         void handleConnection();

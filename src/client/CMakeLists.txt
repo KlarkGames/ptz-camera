@@ -41,7 +41,6 @@ set(ptz-camera-client_resource_files
     "qml/main.qml"
     "qml/ControlScreen.qml"
     "qml/ConnectionScreen.qml"
-    "qml/Style.qml"
     "qml/RecordButton.qml"
     "qml/qmldir"
     "res/logo.png"

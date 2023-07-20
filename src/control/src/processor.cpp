@@ -43,11 +43,6 @@ Processor::Processor(QObject *parent)
     m_timer.start();
 }
 
-/*QVideoSink *Processor::videoSink() const
-{
-    return m_videoSink.get();
-}*/
-
 MountDriver *Processor::mountDriver() const
 {
     return m_mountDriver.get();
@@ -58,18 +53,9 @@ CameraWrapper *Processor::getCameraWrapper() const
     return m_cameraWrapper.get();
 }
 
-/*void Processor::setVideoSink(QVideoSink *newVideoSink)
+void Processor::rotateMount(QJsonObject params)
 {
-    if (m_videoSink == newVideoSink)
-        return;
-    m_videoSink = newVideoSink;
-    connect(newVideoSink, &QVideoSink::videoFrameChanged, this, &Processor::hvideoFrameChanged);
-    emit videoSinkChanged();
-}*/
-
-void Processor::rotateMount(QVariantMap paramsMap)
-{
-    this->m_mountDriver->rotate(paramsMap);
+    this->m_mountDriver->rotate(params);
 }
 
 void Processor::setCameraWrapper(CameraWrapper *newCameraWrapper)
@@ -80,21 +66,13 @@ void Processor::setCameraWrapper(CameraWrapper *newCameraWrapper)
     emit cameraWrapperChanged();
 }
 
-/*void Processor::hvideoFrameChanged(const QVideoFrame &frame) {
-
-    if (m_counter++ == m_max_count) {
-        m_counter = 0;
-        emit handleFrameRequest(frame);
-    }
-}*/
-
 void Processor::handleFrameWithNN(QImage frame)
 {
     m_videoSize = frame.size();
     cv::Mat input(m_videoSize.height(), m_videoSize.width(), CV_8UC4, frame.bits());
     cv::cvtColor(input, input, cv::COLOR_BGRA2RGB);
 
-    std::vector<ObjectInfo> objects = m_deepSort.forward(input);
+    std::vector<ObjectInfo> objects = m_deepSort->forward(input);
     emit handleObjectsRequest(objects);
 }
 
@@ -139,10 +117,21 @@ void Processor::setTracking(bool value)
     if (m_isTracking == value)
         return;
 
-    if (value)
+    if (value) {
+        if (m_deepSort.isNull()) {
+            try {
+                m_deepSort = QSharedPointer<DeepSORT>::create();
+            } catch (...) {
+                qDebug() << "Failed to initialize DeepSORT";
+                m_deepSort.clear();
+                return;
+            }
+        }
+
         QObject::connect(m_streamer, &Streamer::frameReady, this, &Processor::handleFrameWithNN);
-    else
+    } else {
         QObject::disconnect(m_streamer, &Streamer::frameReady, this, &Processor::handleFrameWithNN);
+    }
 
     m_isTracking = value;
     emit trackingStatusChanged(value);

@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QSharedPointer>
 #include <QVideoSink>
 #include <QQmlEngine>
 #include <QTimer>
@@ -26,21 +27,18 @@
 class Processor : public QObject
 {
     Q_OBJECT
-    //Q_PROPERTY(QVideoSink* processorVideoSink READ videoSink WRITE setVideoSink NOTIFY videoSinkChanged)
     Q_PROPERTY(MountDriver* mountDriver READ mountDriver NOTIFY mountDriverChanged)
     Q_PROPERTY(CameraWrapper* cameraWrapper READ getCameraWrapper WRITE setCameraWrapper NOTIFY cameraWrapperChanged)
     QML_ELEMENT
 
     public:
         explicit Processor(QObject *parent = nullptr);
-        //QVideoSink *videoSink() const;
         MountDriver *mountDriver() const;
         CameraWrapper *getCameraWrapper() const;
-        //void setVideoSink(QVideoSink *newVideoSink);
         void setCameraWrapper(CameraWrapper *newCameraWrapper);
         void setCamera(QString cameraName);
         QPair<Direction, Direction> getDirections(QRect bbox);
-        Q_INVOKABLE void rotateMount(QVariantMap);
+        Q_INVOKABLE void rotateMount(QJsonObject);
         void setTracking(bool value);
 
 
@@ -50,18 +48,15 @@ class Processor : public QObject
         void cameraWrapperChanged();
         void mountDriverChanged();
         void moveCameraRequest(QPair<Direction, Direction> cameraDirections);
-        //void handleFrameRequest(const QVideoFrame &frame);
         void handleObjectsRequest(std::vector<ObjectInfo> objects);
 
     public slots:
-        //void hvideoFrameChanged(const QVideoFrame &frame);
         void moveCamera();
         void handleFrameWithNN(QImage frame);
 
 
 
     private:
-        //QPointer<QVideoSink> m_videoSink;
         QPointer<MountDriver> m_mountDriver;
         QPointer<Streamer> m_streamer;
         QPointer<Server> m_server;
@@ -70,9 +65,8 @@ class Processor : public QObject
 
         QPointer<CameraWrapper> m_cameraWrapper;
         QPointer<QCamera> camera;
+        QSharedPointer<DeepSORT> m_deepSort;
         QTimer m_timer;
-
-        DeepSORT m_deepSort;
 
         float vertical_border;
         float horizontal_border;
