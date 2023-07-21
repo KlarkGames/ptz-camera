@@ -27,6 +27,7 @@ class MountDriver : public QObject
         QStringList availablePortNames();
         QString currentPortName();
         void rotate(QJsonObject params);
+        QPair<Direction, Direction> arduinoState;
 
     signals:
         void currentPortChanged();

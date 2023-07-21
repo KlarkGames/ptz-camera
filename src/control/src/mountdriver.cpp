@@ -55,26 +55,46 @@ void MountDriver::rotate(QJsonObject params)
     QString direction = params.value("direction").toString();
     QString command = params.value("command").toString();
 
-    QString signal = "";
+    QString signal = "0000";
+
+    QChar *powerPointer = nullptr;
+    Direction *directionPointer;
+    Direction value;
 
     if (direction == "left") {
-        signal += 'L';
+        directionPointer = &arduinoState.first;
+        value = Direction::left;
+        signal[0] = '1';
+        powerPointer = &signal[1];
     } else if (direction == "right") {
-        signal += 'R';
+        directionPointer = &arduinoState.first;
+        value = Direction::right;
+        signal[0] = '0';
+        powerPointer = &signal[1];
     } else if (direction == "up") {
-        signal += 'U';
+        directionPointer = &arduinoState.second;
+        value = Direction::top;
+        signal[2] = '0';
+        powerPointer = &signal[3];
     } else if (direction == "down") {
-        signal += 'D';
+        directionPointer = &arduinoState.second;
+        value = Direction::bottom;
+        signal[2] = '1';
+        powerPointer = &signal[3];
     } else {
         qDebug("Invalid direction. Got: " + direction.toLatin1() + ", allowed \"left\", \"right\", \"up\", \"down\"");
     }
 
-    if (command == "launch") {
-        signal += 'L';
-    } else if (command == "stop") {
-        signal += 'S';
-    } else {
-        qDebug("Invalid command. Got: " + command.toLatin1() + ", allowed \"launch\", \"stop\"");
+    if (powerPointer != nullptr) {
+        if (command == "launch") {
+            *powerPointer = '1';
+            *directionPointer = value;
+        } else if (command == "stop") {
+            *powerPointer = '0';
+            *directionPointer = Direction::hold;
+        } else {
+            qDebug("Invalid command. Got: " + command.toLatin1() + ", allowed \"launch\", \"stop\"");
+        }
     }
     this->sendSignal(signal);
 }
@@ -116,15 +136,42 @@ void MountDriver::handleNeuralNetRequest(QPair <Direction, Direction> directions
     Direction horizontal_direction = directions.first;
     Direction vertical_direction = directions.second;
 
-//    if (horizontal_direction == Direction::left)
-//        this->sendSignal(5, 2, 1, 50);
-//    else if (horizontal_direction == Direction::right)
-//        this->sendSignal(5, 2, 0, 50);
+    QVariantMap horizontal_map;
+    QVariantMap vertical_map;
 
-//    if (vertical_direction == Direction::top)
-//        this->sendSignal(6, 3, 0, 50);
-//    else if (vertical_direction == Direction::bottom)
-//        this->sendSignal(6, 3, 1, 50);
+    QString signal = "";
+
+    switch (horizontal_direction) {
+    case Direction::left:
+        signal += "11";
+        arduinoState.first = Direction::left;
+        break;
+    case Direction::right:
+        signal += "01";
+        arduinoState.first = Direction::right;
+        break;
+    default:
+        signal += "00";
+        arduinoState.first = Direction::hold;
+        break;
+    }
+
+    switch (vertical_direction) {
+    case Direction::top:
+        signal += "01";
+        arduinoState.second = Direction::top;
+        break;
+    case Direction::bottom:
+        signal += "11";
+        arduinoState.second = Direction::bottom;
+        break;
+    default:
+        signal += "00";
+        arduinoState.second = Direction::hold;
+        break;
+    }
+
+    sendSignal(signal);
 }
 
 void MountDriver::sendSignal(QString signal)
