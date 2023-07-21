@@ -11,45 +11,32 @@ Server::Server(QObject *parent) :
 
 void Server::initServer()
 {
-    int port = 41419, portStream = 5000;
-    QHostAddress ipAddress;
+    int port = 41419;
+
     const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
     // use the first non-localhost IPv4 address
     for (const QHostAddress &entry : ipAddressesList) {
         if (entry != QHostAddress::LocalHost && entry.toIPv4Address()) {
-            ipAddress = entry;
+            m_address = entry;
             break;
         }
     }
 
-    if (ipAddress.isNull()) {
+    if (m_address.isNull()) {
         qCritical() << tr("Server:") << tr("Unable to bind network address.");
         return;
     }
-    if (m_pWebSocketServer->listen(ipAddress, port)) {
+    if (m_pWebSocketServer->listen(m_address, port)) {
         if (m_debug)
-            qDebug() << tr("The server is running on: %1:%2").arg(ipAddress.toString()).arg(port);
+            qDebug() << tr("The server is running on: %1:%2").arg(m_address.toString()).arg(port);
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
                 this, &Server::handleConnection);
     }
+}
 
-    m_ffmpegSession = ffmpegkit::FFmpegKit::executeAsync(
-        QString(
-            "-i /dev/video0 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -c:v libx264 -f rawvideo tcp://%1:%2?listen"
-        ).arg(ipAddress.toString()).arg(portStream).toStdString(),
-
-        [this](auto session) {
-            const auto state = session->getState();
-            auto returnCode = session->getReturnCode();
-
-            if (m_debug) {
-                qDebug() << "FFmpeg process exited with state"
-                         << ffmpegkit::FFmpegKitConfig::sessionStateToString(state)
-                         << "and rc" << returnCode->getValue();
-                qDebug() << session->getFailStackTrace();
-            }
-        }
-    );
+QHostAddress Server::address()
+{
+    return m_address;
 }
 
 void Server::handleConnection()
@@ -58,6 +45,22 @@ void Server::handleConnection()
 
     connect(pSocket, &QWebSocket::textMessageReceived, this, &Server::processTextMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &Server::socketDisconnected);
+
+    QJsonObject msg, params;
+
+    params["isRecording"] = m_isRecording;
+    if (m_isRecording)
+        params["recStartTime"] = QString::number(m_recStartTime);
+    params["isTracking"] = m_isTracking;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "init";
+    msg["params"] = params;
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+
+    pSocket->sendTextMessage(msg_s);
+
+    if (m_debug)
+        qDebug() << "Connected: " << pSocket->localAddress();
 
     m_clients << pSocket;
 }
@@ -74,7 +77,7 @@ void Server::processTextMessage(QString message)
             qDebug() << jsonError.errorString();
             pClient->sendTextMessage(jsonError.errorString());
         }
-         else {
+        else {
             this->handleCommand(doc);
         }
     }
@@ -91,14 +94,88 @@ void Server::socketDisconnected()
     }
 }
 
+void Server::setRecordingStatus(bool value, qint64 time)
+{
+    if (m_isRecording == value)
+        return;
+
+    m_isRecording = value;
+    if (value)
+        m_recStartTime = time;
+
+    QJsonObject msg, params;
+    params["value"] = value;
+    params["time"] = QString::number(time);
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "updRecording";
+    msg["params"] = params;
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+
+    for (auto *client : m_clients)
+        client->sendTextMessage(msg_s);
+}
+
+void Server::setTrackingStatus(bool value)
+{
+    if (m_isTracking == value)
+        return;
+
+    m_isTracking = value;
+
+    QJsonObject msg, params;
+    params["value"] = value;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "updTracking";
+    msg["params"] = params;
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+
+    for (auto *client : m_clients)
+        client->sendTextMessage(msg_s);
+}
+
 void Server::handleCommand(QJsonDocument doc)
 {
-    QJsonObject jObject = doc.object();
-    QVariantMap mainMap = jObject.toVariantMap();
-    QString protocol = mainMap.value("jsonrpc").toString();
-    QString command = mainMap.value("method").toString();
+    QJsonObject msg = doc.object();
+
+    QString command = msg.value("method").toString();
+    QJsonObject params = msg.value("params").toObject();
+
     if (command == "rotate") {
-        QVariantMap paramsMap = mainMap.value("params").toMap();
-        emit rotateCmdRecieved(paramsMap);
+        emit rotateCmdReceived(params);
+    } else if (command == "setRecording") {
+        emit setRecordingCmdReceived(params.value("value").toBool());
+    } else if (command == "setTracking") {
+        emit setTrackingCmdReceived(params.value("value").toBool());
     }
+}
+
+void Server::handleObjectsRequest(std::vector<DeepSORT::ObjectInfo> objects)
+{
+    QJsonObject msg, params;
+    QJsonArray objArray;
+
+    for (const auto& obj : objects) {
+        QJsonObject data;
+
+        data["objectId"] = obj.id;
+        data["className"] = QString::fromStdString(obj.className);
+        data["rect"] = QJsonObject{
+            {"x", obj.bbox.x},
+            {"y", obj.bbox.y},
+            {"width", obj.bbox.width},
+            {"height", obj.bbox.height}
+        };
+
+        objArray.append(data);
+    }
+
+    params["objects"] = objArray;
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "updTrackingObjects";
+    msg["params"] = params;
+
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+
+    for (auto *client : m_clients)
+        client->sendTextMessage(msg_s);
 }

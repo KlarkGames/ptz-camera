@@ -8,6 +8,7 @@
 #include <QSerialPortInfo>
 #include <QTextStream>
 #include <QStringList>
+#include <QJsonObject>
 #include <QDebug>
 #include "utils.h"
 
@@ -25,7 +26,7 @@ class MountDriver : public QObject
         void setCurrentPort(QString portName);
         QStringList availablePortNames();
         QString currentPortName();
-        void rotate(QVariantMap);
+        void rotate(QJsonObject params);
 
     signals:
         void currentPortChanged();

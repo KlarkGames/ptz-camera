@@ -12,12 +12,14 @@ qt_add_executable(ptz-camera-client
     src/main.cpp
     src/client.h
     src/client.cpp
+    src/trackingobjectmodel.h
+    src/trackingobjectmodel.cpp
 )
 
 set_target_properties(ptz-camera-client PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/dist/MACOSX_BUNDLE/Info.plist.in
 )
 
 target_include_directories(ptz-camera-client PUBLIC
@@ -39,9 +41,9 @@ set(ptz-camera-client_resource_files
     "qml/main.qml"
     "qml/ControlScreen.qml"
     "qml/ConnectionScreen.qml"
-    "qml/Style.qml"
     "qml/RecordButton.qml"
     "qml/qmldir"
+    "res/logo.png"
 )
 
 qt_add_resources(ptz-camera-client "ptz-camera-client"

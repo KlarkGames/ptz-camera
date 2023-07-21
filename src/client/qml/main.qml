@@ -14,17 +14,10 @@ Window {
 
     Material.theme: Material.Light
 
-    /*width: Style.screenWidth
-    height: Style.screenHeigth
-
-    onWidthChanged:{
-        Style.calculateRatio(root.width, root.height)
-    }*/
-
     StackView {
         id: stackView
         anchors.fill: parent
-        initialItem: connectionScreenComp
+        initialItem: splashScreenComp
         focus: true
         onFocusChanged: { focus = true; }
 
@@ -34,9 +27,26 @@ Window {
     }
 
     Component {
+        id: splashScreenComp
+        Image {
+            fillMode: Image.PreserveAspectFit
+            source: "qrc:/res/logo.png"
+
+            Timer {
+                running: true
+                repeat: false
+                interval: 3000
+                onTriggered: {
+                    stackView.clear(StackView.ReplaceTransition)
+                    stackView.push(connectionScreenComp)
+                }
+            }
+        }
+    }
+
+    Component {
         id: connectionScreenComp
         ConnectionScreen {
-            //stack: stackView
         }
     }
 }

@@ -1,4 +1,4 @@
-#include "targetingobject.h"
+#include "trackingobject.h"
 
 
 TrackingObject::TrackingObject(int ID, cv::Rect2i position,

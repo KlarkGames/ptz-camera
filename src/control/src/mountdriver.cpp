@@ -50,10 +50,10 @@ QString MountDriver::currentPortName()
     return this->m_serialPort->portName();
 }
 
-void MountDriver::rotate(QVariantMap paramsMap)
+void MountDriver::rotate(QJsonObject params)
 {
-    QString direction = paramsMap.value("direction").toString();
-    QString command = paramsMap.value("command").toString();
+    QString direction = params.value("direction").toString();
+    QString command = params.value("command").toString();
 
     QString signal = "";
 

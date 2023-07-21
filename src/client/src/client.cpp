@@ -1,5 +1,6 @@
 #include "client.h"
 #include <QJsonObject>
+#include <QHash>
 
 Client::Client(QObject *parent)
     : QObject{parent}
@@ -36,40 +37,149 @@ QUrl Client::streamSource()
     return m_streamSource;
 }
 
+
 void Client::afterConnected()
 {
     emit connected();
 }
 
-void Client::handleReceivedMessage(QStringView msg)
+void Client::setIsRecording(bool value)
 {
-    qDebug() << "Received:" << msg;
+    if (m_isRecording == value)
+        return;
+    m_isRecording = value;
+    emit isRecordingChanged();
 }
 
-bool Client::sendRotateCmd(RotateDirection dir, int steps)
+void Client::setIsTracking(bool value)
 {
-    QJsonObject cmd, params;
-    switch (dir) {
-    case DIR_LEFT:
-    case DIR_RIGHT:
-        params["axis"] = "x";
-        break;
-    case DIR_UP:
-    case DIR_DOWN:
-        params["axis"] = "y";
-        break;
-    default:
-        return false;
+    if (m_isTracking == value)
+        return;
+    m_isTracking = value;
+    emit isTrackingChanged();
+}
+
+QTime Client::getRecElapsedTimeMSecs()
+{
+    if (!m_isRecording)
+        return QTime(0, 0);
+
+    return QTime::fromMSecsSinceStartOfDay(QDateTime::currentMSecsSinceEpoch() - m_recStartTime);
+}
+
+void Client::handleReceivedMessage(QStringView msg_s)
+{
+    qDebug() << "Received:" << msg_s;
+
+    QJsonDocument doc = QJsonDocument::fromJson(msg_s.toUtf8());
+    QJsonObject msg = doc.object();
+
+    QString method = msg.value("method").toString();
+    QJsonObject params = msg.value("params").toObject();
+
+    if (method == "init") {
+        setIsRecording(params.value("isRecording").toBool());
+        if (params.contains("recStartTime"))
+            m_recStartTime = params.value("recStartTime").toString().toLongLong();
+        setIsTracking(params.value("isTracking").toBool());
     }
+    else if (method == "updRecording") {
+        setIsRecording(params.value("value").toBool());
+        if (m_isRecording)
+            m_recStartTime = params.value("time").toString().toLongLong();
+    }
+    else if (method == "updTracking") {
+        setIsTracking(params.value("value").toBool());
+    }
+    else if (method == "updTrackingObjects") {
+        QHash<int, TrackingObjectModel::Data> objects;
+        QJsonArray objArray = params["objects"].toArray();
 
-    params["direction"] = (int)dir;
-    params["steps"] = steps;
+        for (QJsonValueConstRef val : objArray) {
+            QJsonObject obj = val.toObject();
+            TrackingObjectModel::Data data;
 
-    cmd["method"] = "rotate";
-    cmd["params"] = params;
+            data.objectId = obj.value("objectId").toInt();
+            data.className = obj.value("className").toString();
 
-    QString cmdMsg = QJsonDocument(cmd).toJson(QJsonDocument::Compact);
-    return m_socket.sendTextMessage(cmdMsg) >= cmdMsg.size();
+            QJsonObject rect = obj.value("rect").toObject();
+            data.rect = QRect(
+                rect.value("x").toInt(),
+                rect.value("y").toInt(),
+                rect.value("width").toInt(),
+                rect.value("height").toInt()
+            );
+
+            objects.insert(data.objectId, data);
+        }
+
+        m_trackingObjectModel.updateData(objects);
+    }
+}
+
+bool Client::isRecording()
+{
+    return m_isRecording;
+}
+
+bool Client::isTracking()
+{
+    return m_isTracking;
+}
+
+TrackingObjectModel* Client::trackingObjectModel()
+{
+    return &m_trackingObjectModel;
+}
+
+bool Client::sendRotateCmd(RotateDirection dir, bool launch)
+{
+    static const QHash<RotateDirection, QString> DIRS{
+        {DIR_LEFT, "left"},
+        {DIR_RIGHT, "right"},
+        {DIR_UP, "up"},
+        {DIR_DOWN, "down"}
+    };
+
+    QJsonObject msg, params;
+
+    params["direction"] = DIRS.value(dir);
+    params["command"] = launch ? "launch" : "stop";
+
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "rotate";
+    msg["params"] = params;
+
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(msg_s) >= msg_s.size();
+}
+
+bool Client::sendSetRecordingCmd(bool value)
+{
+    QJsonObject msg, params;
+
+    params["value"] = value;
+
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "setRecording";
+    msg["params"] = params;
+
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(msg_s) >= msg_s.size();
+}
+
+bool Client::sendSetTrackingCmd(bool value)
+{
+    QJsonObject msg, params;
+
+    params["value"] = value;
+
+    msg["jsonrpc"] = "2.0";
+    msg["method"] = "setTracking";
+    msg["params"] = params;
+
+    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
+    return m_socket.sendTextMessage(msg_s) >= msg_s.size();
 }
 
 Client::~Client()

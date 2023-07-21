@@ -17,19 +17,58 @@ GridLayout {
     Client {
         id: client
         Component.onCompleted: {
-            console.debug(1, ipAddress)
             client.connectToHost(ipAddress)
-            videoItem.source = client.streamSource
-            videoItem.play()
+        }
+
+        onIsRecordingChanged: {
+            elapsedTime.upd()
+        }
+
+        onConnected: {
+            mediaPlayer.source = client.streamSource
+            mediaPlayer.play()
         }
     }
 
-    Video {
+    MediaPlayer {
+        id: mediaPlayer
+        videoOutput: videoItem
+    }
+
+    VideoOutput {
         id: videoItem
         Layout.fillWidth: true
         Layout.fillHeight: true
         Layout.preferredHeight: 5
         Layout.preferredWidth: 5
+
+        Repeater {
+            model: client.isTracking ? client.trackingObjectModel : 0
+            delegate: Rectangle {
+                Text {
+                    color: "red"
+                    font.pixelSize: 12
+                    text: model.className
+                    x: 0
+                    y: -15
+                }
+
+                x: model.rect.x / videoItem.sourceRect.width * videoItem.contentRect.width + videoItem.contentRect.x
+                y: model.rect.y / videoItem.sourceRect.height * videoItem.contentRect.height + videoItem.contentRect.y
+                width: model.rect.width / videoItem.sourceRect.width * videoItem.contentRect.width
+                height: model.rect.height / videoItem.sourceRect.height * videoItem.contentRect.height
+                color: "transparent"
+                border.color: "red"
+                border.width: 3
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        console.debug(model.objectId, model.className)
+                    }
+                }
+            }
+        }
     }
 
     Rectangle {
@@ -62,14 +101,33 @@ GridLayout {
 
                 Row {
                     RecordButton {
-
+                        recording: client.isRecording
+                        onClicked: {
+                            client.sendSetRecordingCmd(!client.isRecording);
+                        }
                     }
 
                     Label {
+                        function upd(time) {
+                            text = Qt.formatTime(client.getRecElapsedTimeMSecs(), "hh:mm:ss.zzz")
+                        }
+
+                        Component.onCompleted: { upd() }
+
+                        id: elapsedTime
                         leftPadding: 10
                         height: parent.height
                         verticalAlignment: Text.AlignVCenter
-                        text: "0:00.0"
+
+                        Timer {
+                            interval: 97
+                            repeat: true
+                            triggeredOnStart: true
+                            running: client.isRecording
+                            onTriggered: {
+                                elapsedTime.upd()
+                            }
+                        }
                     }
                 }
             }
@@ -80,39 +138,56 @@ GridLayout {
                 rows: 3
                 columns: 3
                 Layout.margins: 10
-                rowSpacing: 0
-                columnSpacing: 0
+
+                rowSpacing: 5
+                columnSpacing: 5
 
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
-                RoundButton {
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: "^"
-                    onClicked: client.sendRotateCmd(Client.DIR_UP)
+                    onPressed: client.sendRotateCmd(Client.DIR_UP, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_UP, false)
                 }
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
 
-                RoundButton {
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: "<"
-                    onClicked: client.sendRotateCmd(Client.DIR_LEFT)
+                    onPressed: client.sendRotateCmd(Client.DIR_LEFT, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_LEFT, false)
                 }
-                Item { Layout.fillWidth: true; Layout.fillHeight: true }
 
-                RoundButton {
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    checked: client.isTracking
+                    text: "AI"
+                    onClicked: client.sendSetTrackingCmd(!client.isTracking)
+                }
+
+                Button {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: ">"
-                    onClicked: client.sendRotateCmd(Client.DIR_RIGHT)
+                    onPressed: client.sendRotateCmd(Client.DIR_RIGHT, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_RIGHT, false)
                 }
 
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
-                RoundButton {
+
+                Button {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    enabled: !client.isTracking
                     text: "v"
-                    onClicked: client.sendRotateCmd(Client.DIR_DOWN)
+                    onPressed: client.sendRotateCmd(Client.DIR_DOWN, true)
+                    onReleased: client.sendRotateCmd(Client.DIR_DOWN, false)
                 }
                 Item { Layout.fillWidth: true; Layout.fillHeight: true }
             }

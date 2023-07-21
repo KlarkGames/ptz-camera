@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(ptz-camera LANGUAGES CXX)
 
-set(FFMPEG_KIT_DIR /home/user/ffmpeg-kit/prebuilt/linux-x86_64/ffmpeg-kit)
-
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
@@ -21,7 +19,7 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/coco.names
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/utils)
 
 qt_add_executable(ptz-camera
-    src/mail.cpp
+    src/main.cpp
     src/processor.h
     src/processor.cpp
     src/mountdriver.h
@@ -30,6 +28,9 @@ qt_add_executable(ptz-camera
     src/camerawrapper.cpp
     src/server.h
     src/server.cpp
+
+    src/streamer.h
+    src/streamer.cpp
     src/trackingobject.h
     src/trackingobject.cpp
     src/deepsort.h
@@ -38,22 +39,29 @@ qt_add_executable(ptz-camera
     src/hungarian.cpp
 )
 
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(GSTLIBS REQUIRED
+    gstreamer-1.0>=1.22
+    gstreamer-video-1.0>=1.22
+    gstreamer-app-1.0>=1.22
+    gstreamer-base-1.0>=1.22
+)
+
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set_target_properties(ptz-camera PROPERTIES
     WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
 )
 
 target_include_directories(ptz-camera PUBLIC
     ../shared
     src
-    ${FFMPEG_KIT_DIR}/include
+    ${GSTLIBS_INCLUDE_DIRS}
 )
 
 target_link_directories(ptz-camera PUBLIC
-    ${FFMPEG_KIT_DIR}/lib
+    ${GSTLIBS_LIBRARY_DIRS}
 )
 
 target_link_libraries(ptz-camera PUBLIC
@@ -64,28 +72,9 @@ target_link_libraries(ptz-camera PUBLIC
     Qt::Quick
     Qt::SerialPort
     Qt::WebSockets
-    ffmpegkit
+    ${GSTLIBS_LIBRARIES}
     Qt6::Widgets
     ${OpenCV_LIBS}
-)
-
-# Resources:
-set(ptz-camera_resource_files
-    "qml/main.qml"
-    "qml/qmldir"
-    "qml/MediaList.qml"
-    "qml/AudioInputSelect.qml"
-    "qml/CameraSelect.qml"
-    "qml/MountSelect.qml"
-    "qml/RecordButton.qml"
-    "qml/Controls.qml"
-    "qml/StyleParameter.qml"
-    "qml/StyleRectangle.qml"
-    "qml/SettingsMetaData.qml"
-    "qml/SettingsEncoder.qml"
-    "qml/StyleSlider.qml"
-    "qml/Style.qml"
-    "qml/Playback.qml"
 )
 
 qt_add_resources(ptz-camera "ptz-camera"

@@ -6,8 +6,6 @@ import QtMultimedia
 import QtQuick.Controls.Material
 
 ColumnLayout {
-    property var stack : undefined
-
     Item { Layout.fillHeight: true }
 
     RowLayout {
@@ -16,13 +14,15 @@ ColumnLayout {
             Layout.margins: 5
             Layout.fillWidth: true
             placeholderText: qsTr("IP address")
+            onAccepted: {
+                stackView.push(controlScreenComp, {"ipAddress" : ipAddrTextField.text})
+            }
         }
         Button {
             id: btnConnect
             text: qsTr("Connect")
             onClicked: {
-                console.debug(ipAddrTextField.text)
-                stackView.push(controlScreenComp, {"ipAddress" : ipAddrTextField.text})
+                ipAddrTextField.accepted()
             }
         }
     }
