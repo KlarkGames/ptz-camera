@@ -19,7 +19,7 @@ qt_add_executable(ptz-camera-client
 set_target_properties(ptz-camera-client PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/dist/MACOSX_BUNDLE/Info.plist.in
 )
 
 target_include_directories(ptz-camera-client PUBLIC

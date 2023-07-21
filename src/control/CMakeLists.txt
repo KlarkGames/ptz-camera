@@ -52,8 +52,6 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set_target_properties(ptz-camera PROPERTIES
     WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/../mobile/iOS/Info.plist.in
 )
 
 target_include_directories(ptz-camera PUBLIC
