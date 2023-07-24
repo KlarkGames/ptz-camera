@@ -3,7 +3,7 @@
 TrackingObjectModel::TrackingObjectModel(QObject *parent)
     : QAbstractListModel{parent}
 {
-    //insert({1, "test", QRect{30, 30, 300, 300}});
+
 }
 
 int TrackingObjectModel::rowCount(const QModelIndex& parent) const

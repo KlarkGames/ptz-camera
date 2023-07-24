@@ -5,6 +5,9 @@
 #include <QDateTime>
 #include <QtQml/qqmlregistration.h>
 #include <QtWebSockets>
+#include <QMediaPlayer>
+#include <QThreadPool>
+#include <QRunnable>
 
 #include "trackingobjectmodel.h"
 
@@ -12,10 +15,10 @@ class Client : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(QUrl streamSource READ streamSource NOTIFY streamSourceChanged)
     Q_PROPERTY(TrackingObjectModel* trackingObjectModel READ trackingObjectModel CONSTANT)
     Q_PROPERTY(bool isRecording READ isRecording NOTIFY isRecordingChanged)
     Q_PROPERTY(bool isTracking READ isTracking NOTIFY isTrackingChanged)
+    Q_PROPERTY(QMediaPlayer* mediaPlayer READ mediaPlayer WRITE setMediaPlayer NOTIFY mediaPlayerChanged)
 public:
     enum RotateDirection{
         DIR_LEFT, DIR_RIGHT, DIR_UP, DIR_DOWN
@@ -23,7 +26,8 @@ public:
     Q_ENUM(RotateDirection)
 
     explicit Client(QObject *parent = nullptr);
-    QUrl streamSource();
+    QMediaPlayer* mediaPlayer();
+    void setMediaPlayer(QMediaPlayer *mediaPlayer);
 
     TrackingObjectModel* trackingObjectModel();
     bool isRecording();
@@ -44,7 +48,7 @@ private slots:
 signals:
     void connected();
     void disconnected();
-    void streamSourceChanged();
+    void mediaPlayerChanged();
     void isRecordingChanged();
     void isTrackingChanged();
 
@@ -54,8 +58,8 @@ private:
     bool m_isRecording = false, m_isTracking = false;
     qint64 m_recStartTime;
     QWebSocket m_socket;
-    QUrl m_streamSource;
     TrackingObjectModel m_trackingObjectModel;
+    QMediaPlayer *m_player;
 };
 
 #endif // CLIENT_H

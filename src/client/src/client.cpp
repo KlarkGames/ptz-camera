@@ -18,10 +18,14 @@ void Client::connectToHost(QString addr)
     if (url.port() < 0)
         url.setPort(41419);
 
-    m_streamSource = url;
-    m_streamSource.setScheme("tcp");
-    m_streamSource.setPort(5000);
-    emit streamSourceChanged();
+    QUrl streamSource = url;
+    streamSource.setScheme("tcp");
+    streamSource.setPort(5000);
+
+    QThreadPool::globalInstance()->start(QRunnable::create([this, &streamSource]() {
+        m_player->setSource(streamSource);
+        m_player->play();
+    }));
 
     closeConnection();
     m_socket.open(url);
@@ -31,12 +35,6 @@ void Client::closeConnection()
 {
     return m_socket.close();
 }
-
-QUrl Client::streamSource()
-{
-    return m_streamSource;
-}
-
 
 void Client::afterConnected()
 {
@@ -180,6 +178,20 @@ bool Client::sendSetTrackingCmd(bool value)
 
     QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
     return m_socket.sendTextMessage(msg_s) >= msg_s.size();
+}
+
+QMediaPlayer* Client::mediaPlayer()
+{
+    return m_player;
+}
+
+void Client::setMediaPlayer(QMediaPlayer *mediaPlayer)
+{
+    if (m_player == mediaPlayer)
+        return;
+
+    m_player = mediaPlayer;
+    emit mediaPlayerChanged();
 }
 
 Client::~Client()

@@ -44,6 +44,7 @@ set(ptz-camera-client_resource_files
     "qml/RecordButton.qml"
     "qml/qmldir"
     "res/logo.png"
+    "res/loading.gif"
 )
 
 qt_add_resources(ptz-camera-client "ptz-camera-client"

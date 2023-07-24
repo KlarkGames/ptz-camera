@@ -16,6 +16,8 @@ GridLayout {
 
     Client {
         id: client
+        mediaPlayer: player
+
         Component.onCompleted: {
             client.connectToHost(ipAddress)
         }
@@ -23,15 +25,10 @@ GridLayout {
         onIsRecordingChanged: {
             elapsedTime.upd()
         }
-
-        onConnected: {
-            mediaPlayer.source = client.streamSource
-            mediaPlayer.play()
-        }
     }
 
     MediaPlayer {
-        id: mediaPlayer
+        id: player
         videoOutput: videoItem
     }
 
@@ -41,6 +38,14 @@ GridLayout {
         Layout.fillHeight: true
         Layout.preferredHeight: 5
         Layout.preferredWidth: 5
+
+        AnimatedImage {
+            anchors.centerIn: parent
+            width: 50
+            height: 50
+            source: "qrc:/res/loading.gif"
+            visible: player.mediaStatus == MediaPlayer.LoadingMedia
+        }
 
         Repeater {
             model: client.isTracking ? client.trackingObjectModel : 0

@@ -11,7 +11,7 @@ bool Streamer::initStreaming(QHostAddress address, QString cameraDevice)
     GError *err = NULL;
     QString cmd = QString(
         "v4l2src device=%1 ! tee name=t0 ! queue max-size-buffers=1000 leaky=downstream ! jpegenc ! \
-         appsink async=false max-buffers=30 name=appsink0 t0. ! queue max-size-buffers=1000 leaky=downstream ! \
+         appsink drop=true async=false max-buffers=30 name=appsink0 t0. ! queue max-size-buffers=1000 leaky=downstream ! \
          videoconvert ! video/x-raw,format=I420 ! \
          x264enc tune=zerolatency speed-preset=superfast key-int-max=12 byte-stream=true ! \
          tee name=t1 ! queue max-size-buffers=1000 leaky=downstream ! tcpserversink host=%2 port=%3 async=false t1. ! \
