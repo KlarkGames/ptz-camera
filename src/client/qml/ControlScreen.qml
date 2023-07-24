@@ -25,22 +25,11 @@ GridLayout {
         onIsRecordingChanged: {
             elapsedTime.upd()
         }
-
-        /*onConnected: {
-            mediaPlayer.source = client.streamSource
-            mediaPlayer.play()
-        }*/
     }
 
     MediaPlayer {
         id: player
         videoOutput: videoItem
-
-        /*onMediaStatusChanged: {
-            if (mediaStatus == MediaPlayer.LoadingMedia) {
-
-            }
-        }*/
     }
 
     VideoOutput {

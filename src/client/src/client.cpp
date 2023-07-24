@@ -21,7 +21,6 @@ void Client::connectToHost(QString addr)
     QUrl streamSource = url;
     streamSource.setScheme("tcp");
     streamSource.setPort(5000);
-    //emit streamSourceChanged();
 
     QThreadPool::globalInstance()->start(QRunnable::create([this, &streamSource]() {
         m_player->setSource(streamSource);
@@ -36,11 +35,6 @@ void Client::closeConnection()
 {
     return m_socket.close();
 }
-
-/*QUrl Client::streamSource()
-{
-    return m_streamSource;
-}*/
 
 void Client::afterConnected()
 {
