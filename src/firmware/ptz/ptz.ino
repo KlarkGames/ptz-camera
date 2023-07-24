@@ -11,10 +11,16 @@ const int dirYPin = 6; // Y.DIR
 const int stepZPin = 4; //Z.STEP
 const int dirZPin = 7; // Z.DIR
 
-bool left = false;
-bool right = false;
-bool up = false;
-bool down = false;
+const byte numChars = 4;
+char receivedChars[numChars];
+static byte index = 0;
+
+byte horizontal_dir = 0;
+byte horizontal_power = 0;
+byte vertical_dir = 0;
+byte vertical_power = 0;
+
+char s;
 
 int millisBtwnSteps = 1000;
 
@@ -30,64 +36,59 @@ void setup() {
   Serial.println(F("CNC Shield Initialized"));
 }
 
-void rotateFunc(int stepPin) {
-  digitalWrite(stepPin, HIGH);
+void writeRegisters() {
+  if (horizontal_power != 0) {
+    if (horizontal_dir == 0) {
+      PORTD &= ~_BV(PD5);
+    } else {
+      PORTD |= _BV(PD5);
+    }
+    PORTD |= _BV(PD2);
+  } else {
+    PORTD &= ~_BV(PD2);
+    PORTD &= ~_BV(PD5);
+  }
+
+  if (vertical_power != 0) {
+    if (vertical_dir == 0) {
+      PORTD &= ~_BV(PD6);
+    } else {
+      PORTD |= _BV(PD6);
+    }
+    PORTD |= _BV(PD3);
+  } else {
+    PORTD &= ~_BV(PD3);
+    PORTD &= ~_BV(PD6);
+  }
+}
+
+void rotateFunc() {
+  writeRegisters();
   delayMicroseconds(millisBtwnSteps);
-  digitalWrite(stepPin, LOW);
+  PORTD &= ~_BV(PD2);
+  PORTD &= ~_BV(PD3);
   delayMicroseconds(millisBtwnSteps);
 }
 
 
 // Example message: "UL" 
 void loop() {
-  if (Serial.available() > 0) {
-
-    String line = Serial.readString();
-    int direction = line.charAt(0);
-    int command = line.charAt(1);
-
-    int value = (command == 'L') ? true : false;
-
-    switch(direction)
-    {
-      case 'L': {
-        left = value;
-        if (value == true) right = false;
-        break;
-      }
-      case 'R': {
-        right = value;
-        if (value == true) left = false;
-        break;
-      }
-      case 'U': {
-        up = value;
-        if (value == true) down = false;
-        break;
-      }
-      case 'D': {
-        down = value;
-        if (value == true) up = false;
-        break;
-      }
-    }
-
-} else {
-    if (left == true) {
-      digitalWrite(dirXPin, LEFT);
-      rotateFunc(stepXPin);
-    }
-    if (right == true) {
-      digitalWrite(dirXPin, RIGHT);
-      rotateFunc(stepXPin);
-    }
-    if (up == true) {
-      digitalWrite(dirYPin, UP);
-      rotateFunc(stepYPin);
-    }
-    if (down == true) {
-      digitalWrite(dirYPin, DOWN);
-      rotateFunc(stepYPin);
-    }
+  if (index == numChars) {
+    index = 0;
+    horizontal_dir = (byte)receivedChars[0] - 48;
+    horizontal_power = (byte)receivedChars[1] - 48;
+    vertical_dir = (byte)receivedChars[2] - 48;
+    vertical_power = (byte)receivedChars[3] - 48;
   }
+  
+  if (Serial.available() > 0) {
+    s = Serial.read();    
+
+    if (s != '\n' && (int)s != -1 && s != '\0') {
+      receivedChars[index] = s;
+      index++;
+    }
+  } 
+  
+  rotateFunc();
 }
