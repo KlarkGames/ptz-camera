@@ -48,7 +48,7 @@ GridLayout {
         }
 
         Repeater {
-            model: client.isTracking ? client.trackingObjectModel : 0
+            model: (player.playbackState == MediaPlayer.PlayingState) && client.isTracking ? client.trackingObjectModel : 0
             delegate: Rectangle {
                 Text {
                     color: "red"
