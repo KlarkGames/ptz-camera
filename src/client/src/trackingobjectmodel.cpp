@@ -1,6 +1,4 @@
 #include "trackingobjectmodel.h"
-#include <QRandomGenerator>
-#include <QTimer>
 
 TrackingObjectModel::TrackingObjectModel(QObject *parent)
     : QAbstractListModel{parent}
