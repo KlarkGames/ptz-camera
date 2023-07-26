@@ -4,7 +4,7 @@ project(ptz-camera LANGUAGES CXX)
 set(CMAKE_AUTOMOC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
-find_package(OpenCV 4.5.4 REQUIRED)
+find_package(OpenCV 4.5.1 REQUIRED)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/MobileNetV2_modified.onnx
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/models)
