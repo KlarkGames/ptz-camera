@@ -34,7 +34,7 @@ private:
     QList<int> m_ids;
     QHash<int, Data> m_data;
     void insert(const Data& data);
-    void remove(int objectId);
+    void remove(int index);
 };
 
 #endif // TRACKINGOBJECTMODEL_H

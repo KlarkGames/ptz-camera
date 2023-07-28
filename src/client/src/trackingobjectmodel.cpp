@@ -45,9 +45,15 @@ QHash<int, QByteArray> TrackingObjectModel::roleNames() const
 
 void TrackingObjectModel::updateData(QHash<int, Data> objects)
 {
-    for (int objectId : m_ids)
-        if (!objects.contains(objectId))
-            remove(objectId);
+    int i = 0;
+
+    while (i < m_ids.size()) {
+        if (!objects.contains(m_ids[i])) {
+            remove(i);
+            continue;
+        }
+        ++i;
+    }
 
     for (const Data& data : objects)
         insert(data);
@@ -71,14 +77,17 @@ void TrackingObjectModel::insert(const Data& data)
     }
 }
 
-void TrackingObjectModel::remove(int objectId)
+void TrackingObjectModel::remove(int index)
 {
-    if (!m_data.contains(objectId))
-        return;
+    int objectId = m_ids.value(index);
 
-    int index = m_data[objectId].index;
     beginRemoveRows(QModelIndex(), index, index);
+
     m_ids.remove(index);
     m_data.remove(objectId);
+
+    for(int i = index; i < m_ids.size(); ++i)
+        m_data[m_ids[i]].index--;
+
     endRemoveRows();
 }

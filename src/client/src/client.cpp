@@ -22,9 +22,14 @@ void Client::connectToHost(QString addr)
     streamSource.setScheme("tcp");
     streamSource.setPort(5000);
 
-    QThreadPool::globalInstance()->start(QRunnable::create([this, &streamSource]() {
+    QObject::connect(
+        m_player, &QMediaPlayer::hasVideoChanged,
+        m_player, &QMediaPlayer::play,
+        Qt::SingleShotConnection
+    );
+
+    QThreadPool::globalInstance()->start(QRunnable::create([this, streamSource]() {
         m_player->setSource(streamSource);
-        m_player->play();
     }));
 
     closeConnection();

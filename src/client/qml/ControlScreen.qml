@@ -48,16 +48,8 @@ GridLayout {
         }
 
         Repeater {
-            model: client.isTracking ? client.trackingObjectModel : 0
+            model: (player.playbackState == MediaPlayer.PlayingState) && client.isTracking ? client.trackingObjectModel : 0
             delegate: Rectangle {
-                Text {
-                    color: "red"
-                    font.pixelSize: 12
-                    text: model.className
-                    x: 0
-                    y: -15
-                }
-
                 x: model.rect.x / videoItem.sourceRect.width * videoItem.contentRect.width + videoItem.contentRect.x
                 y: model.rect.y / videoItem.sourceRect.height * videoItem.contentRect.height + videoItem.contentRect.y
                 width: model.rect.width / videoItem.sourceRect.width * videoItem.contentRect.width
@@ -65,6 +57,49 @@ GridLayout {
                 color: "transparent"
                 border.color: "red"
                 border.width: 3
+
+                Behavior on x {
+                    NumberAnimation {
+                        duration: 80
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                Behavior on y {
+                    NumberAnimation {
+                        duration: 80
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 80
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                Behavior on height {
+                    NumberAnimation {
+                        duration: 80
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                Text {
+                    color: "red"
+                    font.pixelSize: 12
+                    text: model.className
+                    x: 5
+                    y: model.rect.y > 15 ? -15 : 5
+
+                    Behavior on y {
+                        NumberAnimation {
+                            duration: 80
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+                }
 
                 MouseArea {
                     anchors.fill: parent
