@@ -1,14 +1,21 @@
 #include "hungarian.h"
 
 
-Hungarian::Hungarian(){}
-Hungarian::~Hungarian(){}
-
-
 double Hungarian::solve(std::vector <std::vector<double> >& DistMatrix, std::vector<int>& Assignment)
 {
-    unsigned int nRows = DistMatrix.size();
+    if (DistMatrix.size() == 0) {
+        qDebug("Input matrix must be 2 dementional");
+        throw 1;
+    }
     unsigned int nCols = DistMatrix[0].size();
+    unsigned int nRows = (nCols == 0) ? 0 : DistMatrix.size();
+
+    for (std::vector<double> row : DistMatrix) {
+        if (row.size() != nCols) {
+            qDebug("Rows of input matrix must be the same size.");
+            throw 1;
+        }
+    }
 
     double *distMatrixIn = new double[nRows * nCols];
     int *assignment = new int[nRows];

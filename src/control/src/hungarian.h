@@ -5,13 +5,12 @@
 #include <vector>
 #include <cfloat> // for DBL_MAX
 #include <cmath>  // for fabs()
+#include <QDebug>
 
 
 class Hungarian
 {
 public:
-    Hungarian();
-    ~Hungarian();
     double solve(std::vector <std::vector<double> >& DistMatrix, std::vector<int>& Assignment);
 
 private:
