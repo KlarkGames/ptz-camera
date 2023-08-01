@@ -17,16 +17,16 @@ class Server : public QObject
 
     public:
         explicit Server(QObject *parent = nullptr);
-        void setRecordingStatus(bool value, qint64 time);
-        void setTrackingStatus(bool value);
+        void updClientSettings(QJsonObject params);
         void handleObjectsRequest(std::vector<DeepSORT::ObjectInfo> objects);
         QHostAddress address();
 
     signals:
         void dataReceived(QByteArray);
         void rotateCmdReceived(QJsonObject);
-        void setRecordingCmdReceived(bool value);
-        void setTrackingCmdReceived(bool value);
+        void setSettingRecieved(QJsonObject params);
+        void setTrackingObjecIdRecieved(int id);
+        void getSettingsRequest();
 
     private:
         void initServer();

@@ -33,6 +33,7 @@ class Processor : public QObject
 
     public:
         explicit Processor(QObject *parent = nullptr);
+        ~Processor();
         MountDriver *mountDriver() const;
         CameraWrapper *getCameraWrapper() const;
         void setCameraWrapper(CameraWrapper *newCameraWrapper);
@@ -40,6 +41,9 @@ class Processor : public QObject
         QPair<Direction, Direction> getDirections(QRect bbox);
         Q_INVOKABLE void rotateMount(QJsonObject);
         void setTracking(bool value);
+        void setTargetingId(int id);
+        void setSettings(QJsonObject params);
+        QJsonObject getSettings();
 
 
     signals:
@@ -48,6 +52,7 @@ class Processor : public QObject
         void cameraWrapperChanged();
         void mountDriverChanged();
         void moveCameraRequest(QPair<Direction, Direction> cameraDirections);
+        void settingsChanged(QJsonObject params);
 
     public slots:
         void moveCamera();
@@ -67,11 +72,12 @@ class Processor : public QObject
         QSharedPointer<DeepSORT> m_deepSort;
         QTimer m_timer;
 
-        float vertical_border;
-        float horizontal_border;
+        double m_verticalBorder;
+        double m_horizontalBorder;
+        int m_targetingId = -1;
         int m_counter;
         int m_max_count;
-        QPair<Direction, Direction> cameraDirections;
+        QPair<Direction, Direction> m_cameraDirections;
 };
 
 #endif // PROCESSOR_H

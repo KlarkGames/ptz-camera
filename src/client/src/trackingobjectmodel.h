@@ -10,6 +10,7 @@ class TrackingObjectModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(int trackingId READ getTrackingId WRITE setTrackingId NOTIFY trackingIdChanged)
 public:
     struct Data {
         union { int index, objectId; };
@@ -29,12 +30,18 @@ public:
     virtual QVariant data(const QModelIndex& index, int role) const;
     virtual QHash<int, QByteArray> roleNames() const;
     void updateData(QHash<int, Data> objects);
+    int getTrackingId();
+    void setTrackingId(int id);
+
+signals:
+    void trackingIdChanged();
 
 private:
     QList<int> m_ids;
     QHash<int, Data> m_data;
     void insert(const Data& data);
     void remove(int index);
+    int m_trackingId = -1;
 };
 
 #endif // TRACKINGOBJECTMODEL_H
