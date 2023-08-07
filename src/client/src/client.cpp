@@ -51,7 +51,7 @@ void Client::setIsRecording(bool value)
     if (m_isRecording == value)
         return;
     m_isRecording = value;
-    emit isRecordingChanged();
+    emit settingsChanged();
 }
 
 void Client::setIsTracking(bool value)
@@ -59,7 +59,7 @@ void Client::setIsTracking(bool value)
     if (m_isTracking == value)
         return;
     m_isTracking = value;
-    emit isTrackingChanged();
+    emit settingsChanged();
 }
 
 QTime Client::getRecElapsedTimeMSecs()
@@ -86,13 +86,24 @@ void Client::handleReceivedMessage(QStringView msg_s)
             m_recStartTime = params.value("recStartTime").toString().toLongLong();
         setIsTracking(params.value("isTracking").toBool());
     }
-    else if (method == "updRecording") {
-        setIsRecording(params.value("value").toBool());
-        if (m_isRecording)
-            m_recStartTime = params.value("time").toString().toLongLong();
-    }
-    else if (method == "updTracking") {
-        setIsTracking(params.value("value").toBool());
+    else if (method == "updSettings") {
+        if (params.keys().contains("tracking")) {
+            setIsTracking(params["tracking"].toBool());
+        }
+        if (params.keys().contains("recording")) {
+            setIsRecording(params["recording"].toBool());
+            if (m_isRecording)
+                m_recStartTime = params.value("recStartTime").toString().toLongLong();
+        }
+        if (params.keys().contains("horizontalBorder")) {
+            m_horizontalBorder = params["horizontalBorder"].toDouble();
+        }
+        if (params.keys().contains("verticalBorder")) {
+            m_verticalBorder = params["verticalBorder"].toDouble();
+        }
+        if (params.keys().contains("targetId")) {
+            m_trackingObjectModel.setTrackingId(params["targetId"].toInt());
+        }
     }
     else if (method == "updTrackingObjects") {
         QHash<int, TrackingObjectModel::Data> objects;
@@ -135,6 +146,19 @@ TrackingObjectModel* Client::trackingObjectModel()
     return &m_trackingObjectModel;
 }
 
+QJsonObject Client::getSettings()
+{
+    QJsonObject params;
+    params["tracking"] = m_isTracking;
+    params["recording"] = m_isRecording;
+    params["targetId"] = m_trackingObjectModel.getTrackingId();
+
+    params["horizontalBorder"] = m_horizontalBorder;
+    params["verticalBorder"] = m_verticalBorder;
+
+    return params;
+}
+
 bool Client::sendRotateCmd(RotateDirection dir, bool launch)
 {
     static const QHash<RotateDirection, QString> DIRS{
@@ -157,29 +181,23 @@ bool Client::sendRotateCmd(RotateDirection dir, bool launch)
     return m_socket.sendTextMessage(msg_s) >= msg_s.size();
 }
 
-bool Client::sendSetRecordingCmd(bool value)
+bool Client::sendSetSettingsAsk(QJsonObject params)
 {
-    QJsonObject msg, params;
-
-    params["value"] = value;
+    QJsonObject msg;
 
     msg["jsonrpc"] = "2.0";
-    msg["method"] = "setRecording";
+    msg["method"] = "setSettingsAsk";
     msg["params"] = params;
 
     QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
     return m_socket.sendTextMessage(msg_s) >= msg_s.size();
 }
 
-bool Client::sendSetTrackingCmd(bool value)
+bool Client::sendGetSettings()
 {
-    QJsonObject msg, params;
-
-    params["value"] = value;
-
+    QJsonObject msg;
     msg["jsonrpc"] = "2.0";
-    msg["method"] = "setTracking";
-    msg["params"] = params;
+    msg["method"] = "getSettings";
 
     QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
     return m_socket.sendTextMessage(msg_s) >= msg_s.size();
@@ -201,5 +219,9 @@ void Client::setMediaPlayer(QMediaPlayer *mediaPlayer)
 
 Client::~Client()
 {
+    QJsonObject settings = getSettings();
+    settings["recording"] = false;
+    settings["tracking"] = false;
+    sendSetSettingsAsk(settings);
     closeConnection();
 }

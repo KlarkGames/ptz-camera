@@ -7,8 +7,8 @@ double Hungarian::solve(std::vector <std::vector<double> >& DistMatrix, std::vec
         qDebug("Input matrix must be 2 dementional");
         throw 1;
     }
+    unsigned int nRows = DistMatrix.size();
     unsigned int nCols = DistMatrix[0].size();
-    unsigned int nRows = (nCols == 0) ? 0 : DistMatrix.size();
 
     for (std::vector<double> row : DistMatrix) {
         if (row.size() != nCols) {

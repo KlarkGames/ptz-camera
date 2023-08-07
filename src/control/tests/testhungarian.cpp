@@ -13,7 +13,7 @@ void TestHungarian::testSolve_data()
     QTest::addColumn<double_matrix>("input");
     QTest::addColumn<std::vector<int>>("expected_result");
 
-    QTest::addRow("Empty") << double_matrix{{}} << std::vector<int>{};
+    QTest::addRow("Empty") << double_matrix{{}} << std::vector<int>{-1};
     QTest::addRow("Zero") << double_matrix{{0.0}} << std::vector<int>{0};
     QTest::addRow("Simple") << double_matrix{{0.0, 0.1, 0.1},
                                              {0.1, 0.0, 0.1},
@@ -66,6 +66,8 @@ void TestHungarian::testInvalidInputs_data()
     QTest::addRow("NonRect") << double_matrix{{0.0, 0.1, 0.1},
                                               {0.1, 0.0},
                                               {0.1, 0.1, 0.0, 2.0}};
+
+    QTest::addRow("NotTwoDimensional") << double_matrix{};
 
     QTest::addRow("NullPointerInput") << *nullMatrix;
 }

@@ -43,6 +43,16 @@ QHash<int, QByteArray> TrackingObjectModel::roleNames() const
     return roleNames;
 }
 
+int TrackingObjectModel::getTrackingId()
+{
+    return m_trackingId;
+}
+
+void TrackingObjectModel::setTrackingId(int id)
+{
+    m_trackingId = id;
+}
+
 void TrackingObjectModel::updateData(QHash<int, Data> objects)
 {
     int i = 0;

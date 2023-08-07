@@ -94,38 +94,11 @@ void Server::socketDisconnected()
     }
 }
 
-void Server::setRecordingStatus(bool value, qint64 time)
+void Server::updClientSettings(QJsonObject params)
 {
-    if (m_isRecording == value)
-        return;
-
-    m_isRecording = value;
-    if (value)
-        m_recStartTime = time;
-
-    QJsonObject msg, params;
-    params["value"] = value;
-    params["time"] = QString::number(time);
+    QJsonObject msg;
     msg["jsonrpc"] = "2.0";
-    msg["method"] = "updRecording";
-    msg["params"] = params;
-    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
-
-    for (auto *client : m_clients)
-        client->sendTextMessage(msg_s);
-}
-
-void Server::setTrackingStatus(bool value)
-{
-    if (m_isTracking == value)
-        return;
-
-    m_isTracking = value;
-
-    QJsonObject msg, params;
-    params["value"] = value;
-    msg["jsonrpc"] = "2.0";
-    msg["method"] = "updTracking";
+    msg["method"] = "updSettings";
     msg["params"] = params;
     QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
 
@@ -142,10 +115,10 @@ void Server::handleCommand(QJsonDocument doc)
 
     if (command == "rotate") {
         emit rotateCmdReceived(params);
-    } else if (command == "setRecording") {
-        emit setRecordingCmdReceived(params.value("value").toBool());
-    } else if (command == "setTracking") {
-        emit setTrackingCmdReceived(params.value("value").toBool());
+    } else if (command == "setSettingsAsk") {
+        emit setSettingRecieved(params);
+    } else if (command == "getSettings") {
+        emit getSettingsRequest();
     }
 }
 

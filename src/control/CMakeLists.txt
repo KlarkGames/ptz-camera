@@ -3,7 +3,7 @@ project(ptz-camera LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Multimedia Qml Quick SerialPort WebSockets)
+find_package(Qt6 REQUIRED COMPONENTS Core Test Gui Multimedia Qml Quick SerialPort WebSockets)
 find_package(OpenCV 4.5.1 REQUIRED)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/MobileNetV2_modified.onnx
@@ -71,6 +71,7 @@ target_link_libraries(ptz-camera PUBLIC
     Qt::Qml
     Qt::Quick
     Qt::SerialPort
+    Qt::Test
     Qt::WebSockets
     ${GSTLIBS_LIBRARIES}
     Qt6::Widgets
@@ -90,6 +91,8 @@ qt6_add_qml_module(ptz-camera
     SOURCES
         src/processor.h
 )
+
+add_subdirectory(tests)
 
 install(TARGETS ptz-camera
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

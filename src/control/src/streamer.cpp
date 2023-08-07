@@ -82,7 +82,19 @@ void Streamer::setRecording(bool value)
     gst_element_set_state(m_filesink, GST_STATE_PLAYING);
 
     m_isRecording = value;
-    emit recordingStatusChanged(value, QDateTime::currentMSecsSinceEpoch());
+    if (value) {
+        m_recStartTime = QDateTime::currentMSecsSinceEpoch();
+    }
+}
+
+bool Streamer::isRecording()
+{
+    return m_isRecording;
+}
+
+qint64 Streamer::getRecStartTime()
+{
+    return m_recStartTime;
 }
 
 GstFlowReturn Streamer::appsinkCallback(GstElement *appsink, Streamer *obj)
