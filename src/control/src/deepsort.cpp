@@ -51,8 +51,8 @@ std::vector<DeepSORT::ObjectInfo> DeepSORT::forward(cv::Mat &inputImage)
     for (int j = 0; j < detections.size(); j++) {
         cv::Rect2i cropArea(std::max(detections[j].bbox.x, 0),
                             std::max(detections[j].bbox.y, 0),
-                            std::min(detections[j].bbox.width, inputImage.cols - detections[j].bbox.x),
-                            std::min(detections[j].bbox.height, inputImage.rows - detections[j].bbox.y));
+                            std::min(detections[j].bbox.width, inputImage.cols - std::max(detections[j].bbox.x, 0)),
+                            std::min(detections[j].bbox.height, inputImage.rows - std::max(detections[j].bbox.y, 0)));
 
         cv::Mat objectImage = inputImage(cropArea);
         detectionAppearances[j] = getAppearance(objectImage);

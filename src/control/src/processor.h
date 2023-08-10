@@ -17,7 +17,6 @@
 #include <opencv2/imgproc.hpp>
 #include <QImageWriter>
 #include <QCamera>
-#include "camerawrapper.h"
 
 #include "server.h"
 #include "mountdriver.h"
@@ -27,23 +26,20 @@
 class Processor : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(MountDriver* mountDriver READ mountDriver NOTIFY mountDriverChanged)
-    Q_PROPERTY(CameraWrapper* cameraWrapper READ getCameraWrapper WRITE setCameraWrapper NOTIFY cameraWrapperChanged)
-    QML_ELEMENT
 
     public:
         explicit Processor(QObject *parent = nullptr);
         ~Processor();
-        MountDriver *mountDriver() const;
-        CameraWrapper *getCameraWrapper() const;
-        void setCameraWrapper(CameraWrapper *newCameraWrapper);
-        void setCamera(QString cameraName);
-        QPair<Direction, Direction> getDirections(QRect bbox);
-        Q_INVOKABLE void rotateMount(QJsonObject);
-        void setTracking(bool value);
-        void setTargetingId(int id);
         void setSettings(QJsonObject params);
         QJsonObject getSettings();
+
+        MountDriver *mountDriver() const;
+        void rotateMount(QJsonObject);
+        void setCamera(QString cameraName);
+
+        QPair<Direction, Direction> getDirections(QRect bbox);
+        void setTracking(bool value);
+        void setTargetingId(int id);
 
 
     signals:
@@ -67,8 +63,6 @@ class Processor : public QObject
         QSize m_videoSize;
         bool m_isTracking = false;
 
-        QPointer<CameraWrapper> m_cameraWrapper;
-        QPointer<QCamera> camera;
         QSharedPointer<DeepSORT> m_deepSort;
         QTimer m_timer;
 

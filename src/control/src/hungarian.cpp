@@ -26,8 +26,12 @@ double Hungarian::solve(std::vector <std::vector<double> >& DistMatrix, std::vec
     // In the solving functions matrices are seen to be saved MATLAB-internally in row-order.
     // (i.e. the matrix [1 2; 3 4] will be stored as a vector [1 3 2 4], NOT [1 2 3 4]).
     for (unsigned int i = 0; i < nRows; i++)
-        for (unsigned int j = 0; j < nCols; j++)
+        for (unsigned int j = 0; j < nCols; j++) {
+            if (std::isnan(DistMatrix[i][j])) {
+                DistMatrix[i][j] = MAXFLOAT;
+            }
             distMatrixIn[i + nRows * j] = DistMatrix[i][j];
+        }
 
     assignmentOptimal(assignment, &cost, distMatrixIn, nRows, nCols);
 

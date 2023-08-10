@@ -24,8 +24,6 @@ qt_add_executable(ptz-camera
     src/processor.cpp
     src/mountdriver.h
     src/mountdriver.cpp
-    src/camerawrapper.h
-    src/camerawrapper.cpp
     src/server.h
     src/server.cpp
 

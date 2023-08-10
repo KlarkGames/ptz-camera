@@ -11,13 +11,13 @@ Processor::Processor(QObject *parent)
     connect(m_server, &Server::rotateCmdReceived, m_mountDriver, &MountDriver::rotate);
     connect(m_server, &Server::setSettingRecieved, this, &Processor::setSettings);
     connect(m_server, &Server::getSettingsRequest, this, [=](){m_server->updClientSettings(getSettings());});
+    connect(m_mountDriver, &MountDriver::availablePortsChanged, this, [=](){m_server->updClientSettings(getSettings());});
+    connect(m_mountDriver, &MountDriver::availableCamerasChanged, this, [=](){m_server->updClientSettings(getSettings());});
 
     m_streamer->initStreaming(m_server->address(), "/dev/video0");
 
     m_verticalBorder = 0.7;
     m_horizontalBorder = 0.7;
-
-    m_cameraWrapper = new CameraWrapper();
 
     m_timer.setInterval(1000);
 
@@ -54,22 +54,9 @@ MountDriver *Processor::mountDriver() const
     return m_mountDriver.get();
 }
 
-CameraWrapper *Processor::getCameraWrapper() const
-{
-    return m_cameraWrapper.get();
-}
-
 void Processor::rotateMount(QJsonObject params)
 {
     this->m_mountDriver->rotate(params);
-}
-
-void Processor::setCameraWrapper(CameraWrapper *newCameraWrapper)
-{
-    if (m_cameraWrapper == newCameraWrapper)
-        return;
-    m_cameraWrapper = newCameraWrapper;
-    emit cameraWrapperChanged();
 }
 
 void Processor::setSettings(QJsonObject params)
@@ -86,9 +73,14 @@ void Processor::setSettings(QJsonObject params)
     if (params.keys().contains("verticalBorder")) {
         m_verticalBorder = params["verticalBorder"].toDouble();
     }
-
     if (params.keys().contains("targetId")) {
         m_targetingId = params["targetId"].toInt();
+    }
+    if (params.keys().contains("currentPort")) {
+        m_mountDriver->setCurrentPort(params["currentPort"].toString());
+    }
+    if (params.keys().contains("currentCamera")) {
+        m_streamer->setCameraDevice(params["currentCamera"].toString());
     }
     m_server->updClientSettings(getSettings());
 }
@@ -106,6 +98,10 @@ QJsonObject Processor::getSettings()
     params["targetId"] = m_targetingId;
     params["horizontalBorder"] = m_horizontalBorder;
     params["verticalBorder"] = m_verticalBorder;
+    params["avaliablePorts"] = QJsonArray::fromStringList(m_mountDriver->availablePortNames());
+    params["currentPort"] = m_mountDriver->currentPortName();
+    params["avaliableCameras"] = QJsonArray::fromStringList(m_mountDriver->availableCameraIds());
+    params["currentCamera"] = m_streamer->getCameraDevice();
 
     return params;
 }
@@ -138,9 +134,17 @@ void Processor::handleFrameWithNN(QImage frame)
 }
 
 void Processor::moveCamera() {
-    if (m_isTracking && (m_cameraDirections.first != Direction::hold ||
-                         m_cameraDirections.second != Direction::hold))
-        emit this->moveCameraRequest(m_cameraDirections);
+    if (m_isTracking) {
+        if (m_cameraDirections.first != Direction::hold || m_cameraDirections.second != Direction::hold) {
+            emit this->moveCameraRequest(m_cameraDirections);
+        }
+    } else {
+        if (m_cameraDirections.first != Direction::hold || m_cameraDirections.second != Direction::hold) {
+            m_cameraDirections.first = Direction::hold;
+            m_cameraDirections.second = Direction::hold;
+            emit this->moveCameraRequest(m_cameraDirections);
+        }
+    }
 }
 
 QPair<Direction, Direction> Processor::getDirections(QRect bbox) {

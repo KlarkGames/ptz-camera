@@ -10,7 +10,7 @@ bool Streamer::initStreaming(QHostAddress address, QString cameraDevice)
 {
     GError *err = NULL;
     QString cmd = QString(
-        "v4l2src name=v4l2src0 device=%1 ! tee name=t0 ! queue max-size-buffers=1000 leaky=downstream ! jpegenc ! \
+        "v4l2src device=%1 name=v4l2src0 ! tee name=t0 ! queue max-size-buffers=1000 leaky=downstream ! jpegenc ! \
          appsink drop=true async=false max-buffers=30 name=appsink0 t0. ! queue max-size-buffers=1000 leaky=downstream ! \
          videoconvert ! video/x-raw,format=I420 ! \
          x264enc tune=zerolatency speed-preset=superfast key-int-max=12 byte-stream=true ! \
@@ -75,9 +75,15 @@ void Streamer::setCameraDevice(QString cameraDevice)
 {
     gst_element_set_state(m_src, GST_STATE_NULL);
     g_object_set(m_src, "device", cameraDevice.toUtf8().constData(), NULL);
-    gst_element_set_state(m_src, GST_STATE_PLAYING);
+    qDebug() << "Trying to PLAY: " << gst_element_set_state(m_src, GST_STATE_PLAYING);
+    m_currentCamera = cameraDevice;
 
     emit cameraDeviceChanged(cameraDevice);
+}
+
+QString Streamer::getCameraDevice()
+{
+    return m_currentCamera;
 }
 
 void Streamer::setRecording(bool value)

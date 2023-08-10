@@ -50,6 +50,11 @@ QString MountDriver::currentPortName()
     return this->m_serialPort->portName();
 }
 
+QStringList MountDriver::availableCameraIds()
+{
+    return m_availableCameraIds;
+}
+
 void MountDriver::rotate(QJsonObject params)
 {
     QString direction = params.value("direction").toString();
@@ -122,6 +127,15 @@ void MountDriver::handleTimeout()
         }
     }
     emit availablePortsChanged();
+
+    foreach (const QCameraDevice &camera, QMediaDevices::videoInputs()) {
+        QString cameraId = camera.id();
+        if (!this->m_availableCameraIds.contains(cameraId)) {
+            this->m_availableCameraIds.append(cameraId);
+            qDebug("Camera available: %s", qUtf8Printable(camera.description()));
+        }
+    }
+    emit availableCamerasChanged();
 }
 
 void MountDriver::handleError(QSerialPort::SerialPortError error)

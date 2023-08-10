@@ -32,6 +32,13 @@ void TestHungarian::testSolve_data()
                                              { 9.5,  5.0}}
                             << std::vector<int>{-1, 0, -1, 1};
 
+    QTest::addRow("WithNanInput") << double_matrix{{NAN, 123.3},
+                                                   {13.7, 6.4}}
+                                  << std::vector<int>{1, 0};
+
+    QTest::addRow("OnlyNanInput") << double_matrix{{NAN}}
+                                  << std::vector<int>{0};
+
     double_matrix matrix;
     std::vector<int> result;
 
