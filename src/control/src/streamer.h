@@ -18,6 +18,7 @@ public:
     explicit Streamer(QObject *parent = nullptr);
 
     bool initStreaming(QHostAddress address, QString cameraDevice);
+    void setCameraDevice(QString cameraDevice);
     void setRecording(bool value);
     bool isRecording();
     qint64 getRecStartTime();
@@ -25,12 +26,13 @@ public:
 
 signals:
     void frameReady(QImage frame);
+    void cameraDeviceChanged(QString cameraDevice);
 
 private:
     int m_frameCounter = 0;
     bool m_isRecording = false;
     qint64 m_recStartTime;
-    GstElement *m_pipeline = nullptr, *m_appsink = nullptr, *m_filesink = nullptr;
+    GstElement *m_pipeline = nullptr, *m_appsink = nullptr, *m_filesink = nullptr, *m_src = nullptr;
     static GstFlowReturn appsinkCallback(GstElement *appsink, Streamer *obj);
 };
 
