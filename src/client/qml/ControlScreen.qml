@@ -314,6 +314,35 @@ GridLayout {
                     }
                 }
 
+                ComboBox {
+                    Text { text: qsTr("Camera:") }
+                    id: cameraChoice
+                    model: client.getCameras
+                    displayText: typeof currentValue === 'undefined' ? "Unavailable" : currentValue.description
+                    currentIndex: find(client.currentCamera)
+
+                    onActivated: {
+                                if (typeof currentValue !== 'undefined') {
+                                    client.currentCamera = currentValue;
+                                }
+                            }
+
+                }
+
+                ComboBox {
+                    Text { text: qsTr("Port:") }
+                    id: portChoice
+                    model: client.getPorts
+                    displayText: typeof currentValue === 'undefined' ? "Unavailable" : currentValue.description
+                    currentIndex: find(client.currentPort)
+
+                    onActivated: {
+                                if (typeof currentValue !== 'undefined') {
+                                    client.currentPort = currentValue;
+                                }
+                            }
+                }
+
                 Button {
                     Layout.fillWidth: true
                     text: qsTr("Save")
@@ -322,6 +351,8 @@ GridLayout {
                         var settings = client.getSettings()
                         settings["horizontalBorder"] = borderWidthSlider.value
                         settings["verticalBorder"] = borderHeightSlider.value
+                        settings["currentCamera"] = cameraChoice.currentValue
+                        settings["currentPort"] = portChoice.currentValue
                         client.sendSetSettingsAsk(settings)
 
                         layout.currentIndex = 0

@@ -9,6 +9,8 @@
 #include <QTextStream>
 #include <QStringList>
 #include <QJsonObject>
+#include <QCamera>
+#include <QMediaDevices>
 #include <QDebug>
 #include "utils.h"
 
@@ -26,12 +28,14 @@ class MountDriver : public QObject
         void setCurrentPort(QString portName);
         QStringList availablePortNames();
         QString currentPortName();
+        QStringList availableCameraIds();
         void rotate(QJsonObject params);
         QPair<Direction, Direction> arduinoState;
 
     signals:
         void currentPortChanged();
         void availablePortsChanged();
+        void availableCamerasChanged();
 
     public slots:
         void handleNeuralNetRequest(QPair<Direction, Direction> directions);
@@ -45,6 +49,7 @@ class MountDriver : public QObject
     private:
         QTimer m_timer;
         QStringList m_availablePortNames;
+        QStringList m_availableCameraIds;
         QSerialPort *m_serialPort = nullptr;
         void sendSignal(QString signal);
 };

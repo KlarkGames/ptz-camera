@@ -44,6 +44,7 @@ void Client::closeConnection()
 void Client::afterConnected()
 {
     emit connected();
+    sendGetSettings();
 }
 
 void Client::setIsRecording(bool value)
@@ -104,6 +105,27 @@ void Client::handleReceivedMessage(QStringView msg_s)
         if (params.keys().contains("targetId")) {
             m_trackingObjectModel.setTrackingId(params["targetId"].toInt());
         }
+        if (params.keys().contains("currentCamera")) {
+            m_currentCamera = params["currentCamera"].toString();
+        }
+        if (params.keys().contains("currentPort")) {
+            m_currentPort = params["currentPort"].toString();
+        }
+        if (params.keys().contains("avaliableCameras")) {
+            QStringList cameras;
+            for (QVariant camera : params["avaliableCameras"].toArray().toVariantList()) {
+                cameras.push_back(camera.toString());
+            }
+            m_availableCameras = cameras;
+        }
+        if (params.keys().contains("avaliablePorts")) {
+            QStringList ports;
+            for (QVariant port : params["avaliablePorts"].toArray().toVariantList()) {
+                ports.push_back(port.toString());
+            }
+            m_avaliablePorts = ports;
+        }
+        emit settingsChanged();
     }
     else if (method == "updTrackingObjects") {
         QHash<int, TrackingObjectModel::Data> objects;
@@ -157,6 +179,16 @@ QJsonObject Client::getSettings()
     params["verticalBorder"] = m_verticalBorder;
 
     return params;
+}
+
+QStringList Client::getPorts()
+{
+    return m_avaliablePorts;
+}
+
+QStringList Client::getCameras()
+{
+    return m_availableCameras;
 }
 
 bool Client::sendRotateCmd(RotateDirection dir, bool launch)

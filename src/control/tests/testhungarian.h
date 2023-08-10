@@ -5,6 +5,7 @@
 #include <QTest>
 #include "../src/hungarian.h"
 #include <vector>
+#include <cmath>
 
 class TestHungarian : public QObject
 {
