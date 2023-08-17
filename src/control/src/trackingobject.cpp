@@ -47,6 +47,15 @@ void TrackingObject::addAge()
     return;
 }
 
+TrackingObject::ObjectInfo TrackingObject::getObjectInfo()
+{
+    return ObjectInfo{
+        .id = m_id,
+        .class_id = m_classId,
+        .bbox = bbox()
+    };
+}
+
 cv::Rect2i TrackingObject::bbox()
 {
     int index = m_previousPositions.rows - 1;
@@ -79,22 +88,6 @@ void TrackingObject::changeAppearance(cv::Mat appearance)
 {
     m_appearance = appearance.clone();
     return;
-}
-
-cv::Mat TrackingObject::createCovar(cv::Rect2i position)
-{
-    cv::Mat lastPosition = m_previousPositions.row(m_previousPositions.rows);
-    cv::Mat vecPosition = rectToMat(position, CV_32F);
-
-    cv::Mat input;
-    input.push_back(vecPosition);
-    input.push_back(lastPosition);
-
-    cv::Mat covar(4, 4, CV_32F);
-
-    cv::calcCovarMatrix(input, covar, m_mean, cv::CovarFlags::COVAR_NORMAL | cv::CovarFlags::COVAR_ROWS);
-
-    return covar;
 }
 
 cv::Mat TrackingObject::createCovar(cv::Rect2i firstPosition, cv::Rect2i secondPosition)

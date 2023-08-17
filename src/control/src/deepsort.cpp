@@ -8,8 +8,7 @@ DeepSORT::DeepSORT(const std::string &pathToYolo,
     pathToClassNames(pathToClassNames),
     pathToCnn(pathToCnn)
 {
-    m_yolo = cv::dnn::readNet(pathToYolo);
-
+    m_yolo = new Yolo5(pathToYolo, pathToClassNames);
     m_cnn = cv::dnn::readNet(pathToCnn);
 
     loadClassNames(pathToClassNames);
@@ -41,211 +40,145 @@ cv::Mat DeepSORT::getAppearance(cv::Mat &objectImage)
     return output;
 }
 
-std::vector<DeepSORT::ObjectInfo> DeepSORT::forward(cv::Mat &inputImage)
+std::vector<cv::Mat> DeepSORT::getAppearances(cv::Mat &inputImage,
+                                                   DetectionVec detections)
 {
-    std::vector<Detection> detections = detectObjects(inputImage);
-    std::vector<cv::Mat> detectionCrops(detections.size());
-    std::vector<cv::Mat> detectionAppearances(detections.size());
-    std::vector<ObjectInfo> result;
+    std::vector<cv::Mat> detectionAppearances;
 
-    for (int j = 0; j < detections.size(); j++) {
-        cv::Rect2i cropArea(std::max(detections[j].bbox.x, 0),
-                            std::max(detections[j].bbox.y, 0),
-                            std::min(detections[j].bbox.width, inputImage.cols - std::max(detections[j].bbox.x, 0)),
-                            std::min(detections[j].bbox.height, inputImage.rows - std::max(detections[j].bbox.y, 0)));
+    for (ObjectDetectionNet::Detection detection : detections) {
+        cv::Rect2i cropArea(std::max(detection.bbox.x, 0),
+                            std::max(detection.bbox.y, 0),
+                            std::min(detection.bbox.width,
+                                     inputImage.cols - std::max(detection.bbox.x, 0)),
+                            std::min(detection.bbox.height,
+                                     inputImage.rows - std::max(detection.bbox.y, 0)));
 
         cv::Mat objectImage = inputImage(cropArea);
-        detectionAppearances[j] = getAppearance(objectImage);
+        detectionAppearances.push_back(getAppearance(objectImage));
     }
-    
-    if (m_trackingObjects.empty()) {
-        for(int i = 0; i < detections.size(); i++) {
-            m_trackingObjects.push_back(TrackingObject(m_trackingObjectCounter++,
-                                                         detections[i].bbox,
-                                                         detections[i].class_id,
-                                                         detectionAppearances[i]));
+    return detectionAppearances;
+}
+
+std::vector<DeepSORT::DetectionInfo> DeepSORT::getDetectionInfoVec(DetectionVec detections,
+                                                                   std::vector<cv::Mat> appearances)
+{
+    assert((detections.size() == appearances.size()) && "Detections and appearances vectors must be the same size");
+    std::vector<DetectionInfo> result;
+    for (int i = 0; i < detections.size(); i++) {
+        result.push_back(DetectionInfo({
+            .class_id = detections[i].class_id,
+            .bbox = detections[i].bbox,
+            .appearance = appearances[i]
+        }));
+    }
+    return result;
+}
+
+void DeepSORT::saveDetections(std::vector<DetectionInfo> detections)
+{
+    for(int i = 0; i < detections.size(); i++) {
+        int id = m_trackingObjectCounter++;
+        m_trackingObjects.push_back(TrackingObject(id,
+                                                   detections[i].bbox,
+                                                   detections[i].class_id,
+                                                   detections[i].appearance));
+    }
+}
+
+std::vector<std::vector<double>> DeepSORT::calculateDestances(std::vector<DeepSORT::DetectionInfo> detections)
+{
+    std::vector<std::vector<double>> matrix(m_trackingObjects.size());
+
+    for (int i = 0; i < m_trackingObjects.size(); i++) {
+        cv::Rect2i predictedBbox = m_trackingObjects[i].kalmanPredict();
+
+        for (DeepSORT::DetectionInfo detection : detections) {
+            float appearanceDistance = m_trackingObjects[i].cosDistance(detection.appearance);
+            float mahalanobisDistance = m_trackingObjects[i].mahalanobis(predictedBbox, detection.bbox);
+            float distance = LAMBDA * appearanceDistance + (1 - LAMBDA) * mahalanobisDistance;
+
+            matrix[i].push_back(distance);
         }
-    } else {
-        std::vector< std::vector <double> > matrix(m_trackingObjects.size());
-        std::vector<int> assigments(m_trackingObjects.size());
-        
-        for (int i = 0; i < m_trackingObjects.size(); i++) {
-            
-            cv::Rect2i predictedBbox = m_trackingObjects[i].kalmanPredict();
-            matrix[i] = std::vector<double>(detections.size());
+    }
 
-            for (int j = 0; j < detections.size(); j++) {
+    return matrix;
+}
 
-                cv::Mat detectedAppearance = detectionAppearances[j];
-                
-                float appearanceDistance = m_trackingObjects[i].cosDistance(detectedAppearance);
-                
-                float mahalanobisDistance = m_trackingObjects[i].mahalanobis(predictedBbox, detections[j].bbox);
-                float distance = LAMBDA * appearanceDistance + (1 - LAMBDA) * mahalanobisDistance;
-                matrix[i][j] = distance;
-            }
+void DeepSORT::addAge(std::vector<int> assigments)
+{
+    for (int i = 0; i < assigments.size(); i++) {
+        if (assigments[i] == -1) {
+            m_trackingObjects[i].addAge();
         }
+    }
+}
 
-        solver.solve(matrix, assigments);
-        std::vector<bool> usedAssigments(detections.size());
-
-
-        for (int i = 0; i < assigments.size(); i++) {
-            int assigment = assigments[i];
-
-            if (assigment == -1) {
-                m_trackingObjects[i].addAge();
-                if (m_trackingObjects[i].age() == MAX_TRACKING_OBJECT_AGE) {
-                    m_trackingObjects.erase(m_trackingObjects.begin() + i);
-                }
-            } else {
-                m_trackingObjects[i].addPosition(detections[assigment].bbox);
-                m_trackingObjects[i].changeAppearance(detectionAppearances[assigment]);
-                assert(usedAssigments[assigment] != true);
-                usedAssigments[assigment] = true;
-                
-                result.push_back(ObjectInfo{.id = m_trackingObjects[i].id(),
-                                            .class_id = m_trackingObjects[i].classId(),
-                                            .className = m_class_list[m_trackingObjects[i].classId()],
-                                            .bbox = m_trackingObjects[i].bbox()});
-            }
+void DeepSORT::clearOld()
+{
+    for (int i = 0; i < m_trackingObjects.size(); i++) {
+        if (m_trackingObjects[i].age() == MAX_TRACKING_OBJECT_AGE) {
+            m_trackingObjects.erase(m_trackingObjects.begin() + i);
         }
+    }
+}
 
-        for (int j = 0; j < detections.size(); j++) {
-            if (usedAssigments[j] != true) {
-                m_trackingObjects.push_back(TrackingObject(m_trackingObjectCounter++,
-                                                             detections[j].bbox,
-                                                             detections[j].class_id,
-                                                             detectionAppearances[j]));
-            }
+void DeepSORT::updateObjects(std::vector<int> assigments,
+                             std::vector<DetectionInfo> detections,
+                             std::vector<bool> &processedObjects)
+{
+    for (int i = 0; i < assigments.size(); i++) {
+        if (assigments[i] != -1) {
+            assert((processedObjects[assigments[i]] != true) && "The targeting object was already processed.");
+            m_trackingObjects[i].addPosition(detections[assigments[i]].bbox);
+            m_trackingObjects[i].changeAppearance(detections[assigments[i]].appearance);
+            processedObjects[assigments[i]] = true;
+        }
+    }
+}
+
+std::vector<TrackingObject::ObjectInfo> DeepSORT::getObjects()
+{
+    std::vector<TrackingObject::ObjectInfo> result;
+    for (TrackingObject object : m_trackingObjects) {
+        if (object.age() == 0) {
+            TrackingObject::ObjectInfo objectInfo = object.getObjectInfo();
+            objectInfo.className = m_class_list[objectInfo.class_id];
+            result.push_back(objectInfo);
         }
     }
     return result;
 }
 
-std::vector<DeepSORT::Detection> DeepSORT::detectObjects(cv::Mat &inputImage)
+void DeepSORT::forward(cv::Mat &inputImage)
 {
-    cv::Mat blob;
+    DetectionVec detections = m_yolo->forward(inputImage);
 
-    cv::dnn::blobFromImage(inputImage, blob, 1./255.,
-                           cv::Size(YOLO_INPUT_WIDTH, YOLO_INPUT_HEIGHT),
-                           cv::Scalar(), true, false);
+    std::vector<cv::Mat> detectionCrops(detections.size());
+    std::vector<cv::Mat> appearances = this->getAppearances(inputImage, detections);
+    std::vector<DeepSORT::DetectionInfo> detectionInfo = getDetectionInfoVec(detections, appearances);
 
-    m_yolo.setInput(blob);
+    if (m_trackingObjects.empty()) {
+        this->saveDetections(detectionInfo);
+    } else {
+        std::vector< std::vector <double> > matrix = this->calculateDestances(detectionInfo);
+        std::vector<int> assigments;
 
-    std::vector<cv::Mat> outputs;
-    m_yolo.forward(outputs, m_yolo.getUnconnectedOutLayersNames());
+        solver.solve(matrix, assigments);
 
-    int rows = outputs[0].size[1];
-    int dimensions = outputs[0].size[2];
+        std::vector<bool> processedObjects(detectionInfo.size());
 
-    bool yolov8 = false;
-    // yolov5 has an output of shape (batchSize, 25200, 85) (Num classes + box[x,y,w,h] + confidence[c])
-    // yolov8 has an output of shape (batchSize, 84,  8400) (Num classes + box[x,y,w,h])
-    if (dimensions > rows) // Check if the shape[2] is more than shape[1] (yolov8)
-    {
-        yolov8 = true;
-        rows = outputs[0].size[2];
-        dimensions = outputs[0].size[1];
+        this->addAge(assigments);
+        this->clearOld();
+        this->updateObjects(assigments, detectionInfo, processedObjects);
 
-        outputs[0] = outputs[0].reshape(1, dimensions);
-        cv::transpose(outputs[0], outputs[0]);
-    }
-    float *data = (float *)outputs[0].data;
-
-    float x_factor = inputImage.cols / YOLO_INPUT_WIDTH;
-    float y_factor = inputImage.rows / YOLO_INPUT_HEIGHT;
-
-    std::vector<int> class_ids;
-    std::vector<float> confidences;
-    std::vector<cv::Rect> boxes;
-
-    for (int i = 0; i < rows; ++i)
-    {
-        if (yolov8)
-        {
-            float *classes_scores = data+4;
-
-            cv::Mat scores(1, m_class_list.size(), CV_32F, classes_scores);
-            cv::Point class_id;
-            double maxClassScore;
-
-            minMaxLoc(scores, 0, &maxClassScore, 0, &class_id);
-
-            if (maxClassScore > SCORE_THRESHOLD)
-            {
-                confidences.push_back(maxClassScore);
-                class_ids.push_back(class_id.x);
-
-                float x = data[0];
-                float y = data[1];
-                float w = data[2];
-                float h = data[3];
-
-                int left = int((x - 0.5 * w) * x_factor);
-                int top = int((y - 0.5 * h) * y_factor);
-
-                int width = int(w * x_factor);
-                int height = int(h * y_factor);
-
-                boxes.push_back(cv::Rect(left, top, width, height));
+        std::vector<DeepSORT::DetectionInfo> objectsToSave;
+        for (int j = 0; j < detectionInfo.size(); j++) {
+            if (processedObjects[j] != true) {
+                objectsToSave.push_back(detectionInfo[j]);
             }
         }
-        else // yolov5
-        {
-            float confidence = data[4];
-
-            if (confidence >= CONFIDENCE_THRESHOLD)
-            {
-                float *classes_scores = data+5;
-
-                cv::Mat scores(1, m_class_list.size(), CV_32F, classes_scores);
-                cv::Point class_id;
-                double max_class_score;
-
-                minMaxLoc(scores, 0, &max_class_score, 0, &class_id);
-
-                if (max_class_score > SCORE_THRESHOLD)
-                {
-                    confidences.push_back(confidence);
-                    class_ids.push_back(class_id.x);
-
-                    float x = data[0];
-                    float y = data[1];
-                    float w = data[2];
-                    float h = data[3];
-
-                    int left = int((x - 0.5 * w) * x_factor);
-                    int top = int((y - 0.5 * h) * y_factor);
-
-                    int width = int(w * x_factor);
-                    int height = int(h * y_factor);
-
-                    boxes.push_back(cv::Rect(left, top, width, height));
-                }
-            }
-        }
-
-        data += dimensions;
+        this->saveDetections(objectsToSave);
     }
-
-    std::vector<int> nms_result;
-    cv::dnn::NMSBoxes(boxes, confidences, SCORE_THRESHOLD, NMS_THRESHOLD, nms_result);
-
-    std::vector<Detection> detections{};
-    for (unsigned long i = 0; i < nms_result.size(); ++i)
-    {
-        int idx = nms_result[i];
-
-        Detection result;
-        result.class_id = class_ids[idx];
-        result.confidence = confidences[idx];
-        result.bbox = boxes[idx];
-
-        detections.push_back(result);
-    }
-
-    return detections;
 }
 
 

@@ -46,23 +46,12 @@ void Server::handleConnection()
     connect(pSocket, &QWebSocket::textMessageReceived, this, &Server::processTextMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &Server::socketDisconnected);
 
-    QJsonObject msg, params;
-
-    params["isRecording"] = m_isRecording;
-    if (m_isRecording)
-        params["recStartTime"] = QString::number(m_recStartTime);
-    params["isTracking"] = m_isTracking;
-    msg["jsonrpc"] = "2.0";
-    msg["method"] = "init";
-    msg["params"] = params;
-    QString msg_s = QJsonDocument(msg).toJson(QJsonDocument::Compact);
-
-    pSocket->sendTextMessage(msg_s);
-
     if (m_debug)
         qDebug() << "Connected: " << pSocket->localAddress();
 
     m_clients << pSocket;
+
+    emit newConnection();
 }
 
 void Server::processTextMessage(QString message)
@@ -122,24 +111,13 @@ void Server::handleCommand(QJsonDocument doc)
     }
 }
 
-void Server::handleObjectsRequest(std::vector<DeepSORT::ObjectInfo> objects)
+void Server::handleObjectsRequest(std::vector<TrackingObject::ObjectInfo> objects)
 {
     QJsonObject msg, params;
     QJsonArray objArray;
 
-    for (const auto& obj : objects) {
-        QJsonObject data;
-
-        data["objectId"] = obj.id;
-        data["className"] = QString::fromStdString(obj.className);
-        data["rect"] = QJsonObject{
-            {"x", obj.bbox.x},
-            {"y", obj.bbox.y},
-            {"width", obj.bbox.width},
-            {"height", obj.bbox.height}
-        };
-
-        objArray.append(data);
+    for (auto obj : objects) {
+        objArray.append(obj.toJson());
     }
 
     params["objects"] = objArray;

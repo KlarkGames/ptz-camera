@@ -10,34 +10,55 @@ MountDriver::MountDriver()
 void MountDriver::setCurrentPort(QString portName)
 {
     qDebug("Setting active port to: %s", qUtf8Printable(portName));
-    if (this->m_serialPort == nullptr) {
-        this->m_serialPort = new QSerialPort(this);
-    }
-    if (this->m_serialPort->isOpen() && portName != this->m_serialPort->portName()) {
+    if (this->portIsOpen() && portName != this->m_serialPort->portName()) {
         this->m_serialPort->close();
     }
 
-    foreach(QString availablePortName, this->m_availablePortNames) {
-        if (availablePortName == portName) {
-            this->m_serialPort->setPortName(portName);
-            this->m_serialPort->setBaudRate(9600);
-            this->m_serialPort->open(QIODeviceBase::ReadWrite);
+    if (m_availablePorts.contains(portName)) {
+        this->m_serialPort = m_availablePorts[portName];
+        this->m_serialPort->setBaudRate(9600);
+        this->m_serialPort->open(QIODeviceBase::ReadWrite);
 
-            connect(m_serialPort, &QSerialPort::bytesWritten,
-                    this, &MountDriver::handleBytesWritten);
-            connect(m_serialPort, &QSerialPort::errorOccurred,
-                    this, &MountDriver::handleError);
-            connect(m_serialPort, &QSerialPort::readyRead,
-                    this, &MountDriver::handleReadyRead);
-        }
+        connect(m_serialPort, &QSerialPort::errorOccurred,
+                this, &MountDriver::handleError);
+        connect(m_serialPort, &QSerialPort::readyRead,
+                this, &MountDriver::handleReadyRead);
     }
+}
+
+bool MountDriver::portExists()
+{
+    return this->m_serialPort != nullptr;
+}
+
+bool MountDriver::portIsOpen()
+{
+    return this->portExists() && this->m_serialPort->isOpen();
+}
+
+void MountDriver::setSettings(QJsonObject params)
+{
+    if (params.contains("currentPort")) {
+        setCurrentPort(params["currentPort"].toString());
+    }
+}
+
+QJsonObject MountDriver::getSettings()
+{
+    QJsonObject params;
+
+    params["avaliablePorts"] = QJsonArray::fromStringList(availablePortNames());
+    params["currentPort"] = currentPortName();
+    params["avaliableCameras"] = QJsonArray::fromStringList(availableCameraIds());
+
+    return params;
 }
 
 QStringList MountDriver::availablePortNames()
 {
     QStringList portNames;
     portNames.append("");
-    portNames.append(this->m_availablePortNames);
+    portNames.append(this->m_availablePorts.keys());
     return portNames;
 }
 
@@ -60,48 +81,42 @@ void MountDriver::rotate(QJsonObject params)
     QString direction = params.value("direction").toString();
     QString command = params.value("command").toString();
 
-    QString signal = "0000";
-
-    QChar *powerPointer = nullptr;
     Direction *directionPointer;
     Direction value;
+
+    QPointer<ArduinoCommand> arduinoCommand = stringToArduinoCommand(direction);
+    if (command == "launch") {
+        this->sendSignal(QString::fromStdString(arduinoCommand->start().to_string()));
+    } else if (command == "stop") {
+        this->sendSignal(QString::fromStdString(arduinoCommand->stop().to_string()));
+    } else {
+        qDebug() << "Invalid command. Got: "
+                 << command.toLatin1()
+                 << ", allowed \"launch\", \"stop\"";
+    }
+
+    // TODO: Delete after Artuino return state implementation
 
     if (direction == "left") {
         directionPointer = &arduinoState.first;
         value = Direction::left;
-        signal[0] = '1';
-        powerPointer = &signal[1];
     } else if (direction == "right") {
         directionPointer = &arduinoState.first;
         value = Direction::right;
-        signal[0] = '0';
-        powerPointer = &signal[1];
     } else if (direction == "up") {
         directionPointer = &arduinoState.second;
         value = Direction::top;
-        signal[2] = '0';
-        powerPointer = &signal[3];
     } else if (direction == "down") {
         directionPointer = &arduinoState.second;
         value = Direction::bottom;
-        signal[2] = '1';
-        powerPointer = &signal[3];
-    } else {
-        qDebug("Invalid direction. Got: " + direction.toLatin1() + ", allowed \"left\", \"right\", \"up\", \"down\"");
     }
 
-    if (powerPointer != nullptr) {
-        if (command == "launch") {
-            *powerPointer = '1';
-            *directionPointer = value;
-        } else if (command == "stop") {
-            *powerPointer = '0';
-            *directionPointer = Direction::hold;
-        } else {
-            qDebug("Invalid command. Got: " + command.toLatin1() + ", allowed \"launch\", \"stop\"");
-        }
+
+    if (command == "launch") {
+        *directionPointer = value;
+    } else if (command == "stop") {
+        *directionPointer = Direction::hold;
     }
-    this->sendSignal(signal);
 }
 
 void MountDriver::handleReadyRead()
@@ -113,21 +128,26 @@ void MountDriver::handleReadyRead()
     }
 }
 
-void MountDriver::handleBytesWritten(qint64 bytes)
+void MountDriver::handleTimeout()
 {
+    updateAvailablePorts();
+    updateAvailableCameras();
 }
 
-void MountDriver::handleTimeout()
+void MountDriver::updateAvailablePorts()
 {
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         QString portName = info.portName();
-        if (!this->m_availablePortNames.contains(portName)) {
-            this->m_availablePortNames.append(portName);
+        if (!m_availablePorts.contains(portName)) {
+            m_availablePorts[portName] = new QSerialPort(info);
             qDebug("Port available: %s", qUtf8Printable(info.portName()));
         }
     }
     emit availablePortsChanged();
+}
 
+void MountDriver::updateAvailableCameras()
+{
     foreach (const QCameraDevice &camera, QMediaDevices::videoInputs()) {
         QString cameraId = camera.id();
         if (!this->m_availableCameraIds.contains(cameraId)) {
@@ -141,8 +161,7 @@ void MountDriver::handleTimeout()
 void MountDriver::handleError(QSerialPort::SerialPortError error)
 {
     qDebug() << QObject::tr("Operation timed out for port %1, error: %2")
-                .arg(m_serialPort->portName())
-                .arg(m_serialPort->errorString())
+                .arg(m_serialPort->portName(), m_serialPort->errorString())
              << Qt::endl;
 }
 
@@ -150,37 +169,34 @@ void MountDriver::handleNeuralNetRequest(QPair <Direction, Direction> directions
     Direction horizontal_direction = directions.first;
     Direction vertical_direction = directions.second;
 
-    QVariantMap horizontal_map;
-    QVariantMap vertical_map;
+    ArduinoCommand *horizontalCommand = directionToArduinoCommand(directions.first);
+    ArduinoCommand *verticalCommand = directionToArduinoCommand(directions.second);
 
-    QString signal = "";
+    std::bitset<4> preSignal = horizontalCommand->start() | verticalCommand->start();
+    QString signal = QString::fromStdString(preSignal.to_string());
+
+    // TODO: Delete after arduino return implementation
 
     switch (horizontal_direction) {
     case Direction::left:
-        signal += "11";
         arduinoState.first = Direction::left;
         break;
     case Direction::right:
-        signal += "01";
         arduinoState.first = Direction::right;
         break;
     default:
-        signal += "00";
         arduinoState.first = Direction::hold;
         break;
     }
 
     switch (vertical_direction) {
     case Direction::top:
-        signal += "01";
         arduinoState.second = Direction::top;
         break;
     case Direction::bottom:
-        signal += "11";
         arduinoState.second = Direction::bottom;
         break;
     default:
-        signal += "00";
         arduinoState.second = Direction::hold;
         break;
     }
@@ -206,13 +222,11 @@ void MountDriver::sendSignal(QString signal)
 
     if (bytesWritten == -1) {
         qDebug() << QObject::tr("Failed to write the data to port %1, error: %2")
-                            .arg(m_serialPort->portName())
-                            .arg(m_serialPort->errorString())
-                         << Qt::endl;
+                            .arg(m_serialPort->portName(), m_serialPort->errorString())
+                 << Qt::endl;
     } else if (bytesWritten != signalBytes.size()) {
         qDebug() << QObject::tr("Failed to write all the data to port %1, error: %2")
-                            .arg(m_serialPort->portName())
-                            .arg(m_serialPort->errorString())
-                         << Qt::endl;
+                            .arg(m_serialPort->portName(), m_serialPort->errorString())
+                 << Qt::endl;
     }
 }
