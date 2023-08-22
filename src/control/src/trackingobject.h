@@ -38,6 +38,7 @@ public:
     int age();
     int id();
     int classId();
+    int size();
     cv::Rect2i bbox();
 
     cv::Rect2i kalmanPredict();
@@ -58,10 +59,9 @@ private:
     cv::KalmanFilter* m_kalmanFilter;
 
     cv::Mat m_appearance;
-    cv::Mat m_mean = cv::Mat(1, 4, CV_32F);
-    cv::Mat m_previousPositions = cv::Mat(1, 4, CV_32F);
+    cv::Mat m_mean = cv::Mat(1, 4, CV_64F);
+    cv::Mat m_previousPositions = cv::Mat(0, 4, CV_64F);
 
-    cv::Mat createCovar(cv::Rect2i firstPosition, cv::Rect2i secondPosition);
     cv::Mat rectToMat(cv::Rect input, int type);
 };
 
