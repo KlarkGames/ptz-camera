@@ -4,8 +4,6 @@
 TrackingObject::TrackingObject(int ID, cv::Rect2i position,
                                  int classId, cv::Mat appearance)
 {
-    cv::Mat vecPosition = rectToMat(position, CV_32F);
-
     m_classId = classId;
     m_id = ID;
     m_age = 0;
@@ -21,6 +19,9 @@ TrackingObject::TrackingObject(int ID, cv::Rect2i position,
     setIdentity(m_kalmanFilter->processNoiseCov, cv::Scalar::all(1e-5));
     setIdentity(m_kalmanFilter->measurementNoiseCov, cv::Scalar::all(1e-1));
     setIdentity(m_kalmanFilter->errorCovPost, cv::Scalar::all(1));
+
+    cv::Mat vecPosition = rectToMat(position, CV_32F);
+    this->addPosition(position);
 
     m_kalmanFilter->statePre = vecPosition;
     changeAppearance(appearance);
@@ -47,6 +48,11 @@ void TrackingObject::addAge()
     return;
 }
 
+int TrackingObject::size()
+{
+    return m_previousPositions.rows;
+}
+
 cv::Rect2i TrackingObject::bbox()
 {
     int index = m_previousPositions.rows - 1;
@@ -71,46 +77,12 @@ void TrackingObject::addPosition(cv::Rect2i position)
     m_age = 0;
 
     m_previousPositions.push_back(positionVec.t());
-
-    cv::reduce(m_previousPositions, m_mean, 0, cv::REDUCE_AVG);
 }
 
 void TrackingObject::changeAppearance(cv::Mat appearance)
 {
     m_appearance = appearance.clone();
     return;
-}
-
-cv::Mat TrackingObject::createCovar(cv::Rect2i position)
-{
-    cv::Mat lastPosition = m_previousPositions.row(m_previousPositions.rows);
-    cv::Mat vecPosition = rectToMat(position, CV_32F);
-
-    cv::Mat input;
-    input.push_back(vecPosition);
-    input.push_back(lastPosition);
-
-    cv::Mat covar(4, 4, CV_32F);
-
-    cv::calcCovarMatrix(input, covar, m_mean, cv::CovarFlags::COVAR_NORMAL | cv::CovarFlags::COVAR_ROWS);
-
-    return covar;
-}
-
-cv::Mat TrackingObject::createCovar(cv::Rect2i firstPosition, cv::Rect2i secondPosition)
-{
-    cv::Mat vecFirstPosition = rectToMat(firstPosition, CV_32F);
-    cv::Mat vecSecondPosition = rectToMat(secondPosition, CV_32F);
-
-    cv::Mat input;
-    input.push_back(vecFirstPosition.t());
-    input.push_back(vecSecondPosition.t());
-
-    cv::Mat covar;
-
-    cv::calcCovarMatrix(input, covar, m_mean, cv::CovarFlags::COVAR_NORMAL | cv::CovarFlags::COVAR_ROWS, CV_32F);
-
-    return covar;
 }
 
 cv::Mat TrackingObject::rectToMat(cv::Rect input, int type)
@@ -138,12 +110,17 @@ float TrackingObject::cosDistance(cv::Mat appearance)
 
 float TrackingObject::mahalanobis(cv::Rect2i bbox1, cv::Rect2i bbox2)
 {
-    cv::Mat covar = createCovar(bbox1, bbox2);
+    cv::Mat covar;
+    cv::calcCovarMatrix(m_previousPositions, covar, m_mean,
+                        cv::CovarFlags::COVAR_NORMAL |
+                        cv::CovarFlags::COVAR_ROWS |
+                        cv::CovarFlags::COVAR_SCALE, CV_64F);
 
-    cv::Mat inv = covar.inv();
+    cv::Mat inv;
+    cv::invert(covar, inv, cv::DECOMP_SVD);
 
-    cv::Mat vecBbox1 = rectToMat(bbox1, CV_32F);
-    cv::Mat vecBbox2 = rectToMat(bbox2, CV_32F);
+    cv::Mat vecBbox1 = rectToMat(bbox1, CV_64F);
+    cv::Mat vecBbox2 = rectToMat(bbox2, CV_64F);
 
     return cv::Mahalanobis(vecBbox1, vecBbox2, inv);
 }

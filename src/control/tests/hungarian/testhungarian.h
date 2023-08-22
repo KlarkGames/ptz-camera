@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QTest>
-#include "../src/hungarian.h"
+#include "../../src/hungarian.h"
 #include <vector>
 #include <cmath>
 
@@ -19,7 +19,7 @@ private slots:
     void init();
     void cleanup();
 
-public:
+private:
     Hungarian *m_solver = nullptr;
 };
 
