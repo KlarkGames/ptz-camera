@@ -32,6 +32,7 @@ public:
 
     void forward(cv::Mat &inputImage);
     cv::Mat getAppearance(cv::Mat &objectImage);
+    bool objectsDetected();
     std::vector<ObjectDetectionNet::Detection> detectObjects(cv::Mat &inputImage);
     std::vector<TrackingObject::ObjectInfo> getObjects();
 
@@ -43,10 +44,11 @@ private:
     Yolo5 *m_yolo;
     cv::dnn::Net m_cnn;
     Hungarian solver;
-    std::vector<TrackingObject> m_trackingObjects;
+    std::map<int, std::vector<TrackingObject>> m_trackingObjectsMap;
     std::vector<std::string> m_class_list;
 
     int m_trackingObjectCounter = 0;
+    bool m_objectsDetected = false;
 
     const float CNN_INPUT_WIDTH = 64.0;
     const float CNN_INPUT_HEIGHT = 64.0;    
@@ -57,13 +59,13 @@ private:
     void loadClassNames(std::string path);
 
     std::vector<cv::Mat> getAppearances(cv::Mat &inputImage, DetectionVec detections);
-    std::vector<DetectionInfo> getDetectionInfoVec(DetectionVec detections, std::vector<cv::Mat> appearances);
-    std::vector<std::vector<double>> calculateDestances(std::vector<DetectionInfo> detections);
+    std::map<int, std::vector<DetectionInfo>> getDetectionInfoVec(DetectionVec detections, std::vector<cv::Mat> appearances);
+    std::vector<std::vector<double>> calculateDestances(std::map<int, std::vector<DetectionInfo>> detections, int classId);
 
-    void saveDetections(std::vector<DetectionInfo> detections);
-    void addAge(std::vector<int> assigments);
-    void clearOld();
-    void updateObjects(std::vector<int> assigments, std::vector<DetectionInfo> detections, std::vector<bool> &usedAssigments);
+    void saveDetections(std::map<int, std::vector<DetectionInfo>> detections);
+    void addAge(std::vector<int> assigments, int classId);
+    void clearOld(int classId);
+    void updateObjects(std::vector<int> assigments, std::map<int, std::vector<DetectionInfo>> detections, std::vector<bool> &processedObjects, int classId);
 
 
 };

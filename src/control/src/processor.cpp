@@ -111,15 +111,19 @@ void Processor::handleFrameWithNN(QImage frame)
     m_deepSort->forward(input);
     std::vector<TrackingObject::ObjectInfo> objects = m_deepSort->getObjects();
 
-    for (TrackingObject::ObjectInfo object : objects) {
-        if (object.id == m_targetingId) {
-            m_cameraDirections = getDirections(QRect(
+    if (m_deepSort->objectsDetected()) {
+        for (TrackingObject::ObjectInfo object : objects) {
+            if (object.id == m_targetingId) {
+                m_cameraDirections = getDirections(QRect(
                     object.bbox.x,
                     object.bbox.y,
                     object.bbox.width,
                     object.bbox.height
-                ));
+                    ));
+            }
         }
+    } else {
+        m_cameraDirections = QPair<Direction, Direction>(Direction::hold, Direction::hold);
     }
 
     m_server->handleObjectsRequest(objects);
@@ -127,9 +131,7 @@ void Processor::handleFrameWithNN(QImage frame)
 
 void Processor::moveCamera() {
     if (m_isTracking) {
-        if (m_cameraDirections.first != Direction::hold || m_cameraDirections.second != Direction::hold) {
-            emit this->moveCameraRequest(m_cameraDirections);
-        }
+        emit this->moveCameraRequest(m_cameraDirections);
     } else {
         if (m_cameraDirections.first != Direction::hold || m_cameraDirections.second != Direction::hold) {
             m_cameraDirections.first = Direction::hold;
