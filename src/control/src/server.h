@@ -8,6 +8,7 @@
 #include <QtCore>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTimer>
 
 #include "deepsort.h"
 
@@ -33,6 +34,11 @@ class Server : public QObject
 
     private:
         void initServer();
+        void initBroadcast();
+        QTimer m_broadcastTimer;
+        QUdpSocket m_broadcastSocket;
+        static const int PORT = 41419;
+        static const int BROADCAST_INTERVAL_MS = 1000;
 
         bool m_debug = true;
         bool m_isRecording = false, m_isTracking = false;
@@ -42,6 +48,7 @@ class Server : public QObject
         QList<QWebSocket*> m_clients;
 
     private slots:
+        void sendBroadcastPacket();
         void handleConnection();
         void processTextMessage(QString message);
         void socketDisconnected();
