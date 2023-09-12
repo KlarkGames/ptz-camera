@@ -14,6 +14,8 @@ qt_add_executable(ptz-camera-client
     src/client.cpp
     src/trackingobjectmodel.h
     src/trackingobjectmodel.cpp
+    src/availableservermodel.h
+    src/availableservermodel.cpp
 )
 
 set_target_properties(ptz-camera-client PROPERTIES
@@ -42,9 +44,11 @@ set(ptz-camera-client_resource_files
     "qml/ControlScreen.qml"
     "qml/ConnectionScreen.qml"
     "qml/RecordButton.qml"
+    "qml/ServerListView.qml"
     "qml/qmldir"
     "res/logo.png"
     "res/loading.gif"
+    "res/arrow_back.png"
 )
 
 qt_add_resources(ptz-camera-client "ptz-camera-client"
