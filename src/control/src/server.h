@@ -37,7 +37,6 @@ class Server : public QObject
         void initBroadcast();
         QTimer m_broadcastTimer;
         QUdpSocket m_broadcastSocket;
-        static const int PORT = 41419;
         static const int BROADCAST_INTERVAL_MS = 1000;
 
         bool m_debug = true;

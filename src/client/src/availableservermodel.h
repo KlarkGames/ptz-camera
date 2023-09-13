@@ -3,8 +3,12 @@
 
 #include <QAbstractListModel>
 #include <QObject>
+#include <QTimer>
+#include <QUdpSocket>
+#include <QList>
+#include <QHash>
+#include <QDateTime>
 #include <QQmlEngine>
-//#include <QtQml/qqmlregistration.h>
 
 class AvailableServerModel : public QAbstractListModel
 {
@@ -21,7 +25,23 @@ public:
     virtual QVariant data(const QModelIndex& index, int role) const;
     virtual QHash<int, QByteArray> roleNames() const;
 
-    //virtual ~AvailableServerModel();
+private slots:
+    void filterOld();
+    void handlePacket();
+
+private:
+    const int TIMEOUT_MS = 1500;
+    const int UPDATE_INTERVAL_MS = 300;
+
+    struct Data {
+        qint64 timestamp;
+        QString address;
+    };
+
+    QTimer m_timer;
+    QUdpSocket m_socket;
+    QList<Data> m_list;
+    QHash<QString, QPersistentModelIndex> m_hash;
 };
 
 #endif // AVAILABLESERVERMODEL_H

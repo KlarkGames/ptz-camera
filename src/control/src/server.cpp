@@ -1,4 +1,5 @@
 #include "server.h"
+#include "common_defs.h"
 
 Server::Server(QObject *parent) :
     QObject(parent),
@@ -25,9 +26,9 @@ void Server::initServer()
         qCritical() << tr("Server:") << tr("Unable to bind network address.");
         return;
     }
-    if (m_pWebSocketServer->listen(m_address, PORT)) {
+    if (m_pWebSocketServer->listen(m_address, WS_PORT)) {
         if (m_debug)
-            qDebug() << tr("The server is running on: %1:%2").arg(m_address.toString()).arg(PORT);
+            qDebug() << tr("The server is running on: %1:%2").arg(m_address.toString()).arg(WS_PORT);
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
                 this, &Server::handleConnection);
     }
@@ -42,7 +43,7 @@ void Server::initBroadcast()
 void Server::sendBroadcastPacket()
 {
     QByteArray data = m_address.toString().toUtf8();
-    auto n = m_broadcastSocket.writeDatagram(data, QHostAddress::Broadcast, PORT);
+    auto n = m_broadcastSocket.writeDatagram(data, QHostAddress::Broadcast, BROADCAST_PORT);
 
     if (m_debug && n < data.size()) {
         qDebug() << tr("Failed to broadcast datagram!");

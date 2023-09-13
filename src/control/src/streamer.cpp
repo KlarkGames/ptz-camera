@@ -1,5 +1,6 @@
 #include "streamer.h"
 #include <QDateTime>
+#include "common_defs.h"
 
 Streamer::Streamer(QObject *parent)
     : QObject{parent}
@@ -16,7 +17,7 @@ bool Streamer::initStreaming(QHostAddress address, QString cameraDevice)
          x264enc tune=zerolatency speed-preset=superfast key-int-max=12 byte-stream=true ! \
          tee name=t1 ! queue max-size-buffers=1000 leaky=downstream ! tcpserversink host=%2 port=%3 async=false t1. ! \
          queue max-size-buffers=1000 leaky=downstream ! mpegtsmux ! filesink async=false location=/dev/null name=filesink0"
-    ).arg(cameraDevice, address.toString(), QString::number(PORT));
+    ).arg(cameraDevice, address.toString(), QString::number(STREAM_PORT));
 
     m_pipeline = gst_parse_launch(cmd.toUtf8().constData(), &err);
 
