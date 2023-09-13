@@ -26,7 +26,7 @@ qt_add_executable(ptz-camera
     src/mountdriver.cpp
     src/server.h
     src/server.cpp
-
+    src/settingsconductor.h
     src/streamer.h
     src/streamer.cpp
     src/trackingobject.h
@@ -35,6 +35,12 @@ qt_add_executable(ptz-camera
     src/deepsort.cpp
     src/hungarian.h
     src/hungarian.cpp
+    src/nets/objectdetectionnet.h
+    src/nets/yolo5.cpp
+    src/nets/yolo5.h
+    src/utils.h
+    src/arduinocommand.h
+    src/arduinocommand.cpp
 )
 
 find_package(PkgConfig REQUIRED)
@@ -56,10 +62,12 @@ target_include_directories(ptz-camera PUBLIC
     ../shared
     src
     ${GSTLIBS_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 target_link_directories(ptz-camera PUBLIC
     ${GSTLIBS_LIBRARY_DIRS}
+    ${OpenCV_LIBRARY_DIRS}
 )
 
 target_link_libraries(ptz-camera PUBLIC
@@ -73,7 +81,7 @@ target_link_libraries(ptz-camera PUBLIC
     Qt::WebSockets
     ${GSTLIBS_LIBRARIES}
     Qt6::Widgets
-    ${OpenCV_LIBS}
+    ${OpenCV_LIBRARIES}
 )
 
 qt_add_resources(ptz-camera "ptz-camera"

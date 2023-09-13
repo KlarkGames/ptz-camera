@@ -6,6 +6,7 @@
 #include <opencv2/video/tracking.hpp>
 #include <opencv2/core/hal/interface.h>
 #include <vector>
+#include <QJsonObject>
 
 
 class TrackingObject
@@ -13,6 +14,26 @@ class TrackingObject
 public:
     TrackingObject(int ID, cv::Rect2i position,
                     int classId, cv::Mat appearance);
+
+    struct ObjectInfo
+    {
+        int id {-1};
+        int class_id{};
+        std::string className{"Unknown"};
+        cv::Rect2i bbox{};
+        QJsonObject toJson() {
+            QJsonObject params;
+            params["objectId"] = id;
+            params["className"] = QString::fromStdString(className);
+            params["rect"] = QJsonObject{
+                {"x", bbox.x},
+                {"y", bbox.y},
+                {"width", bbox.width},
+                {"height", bbox.height}
+            };
+            return params;
+        }
+    };
 
     int age();
     int id();
@@ -26,6 +47,7 @@ public:
     void addPosition(cv::Rect2i position);
     void changeAppearance(cv::Mat appearance);
     void addAge();
+    ObjectInfo getObjectInfo();
 
 private:
     int m_id;
@@ -39,7 +61,6 @@ private:
     cv::Mat m_mean = cv::Mat(1, 4, CV_32F);
     cv::Mat m_previousPositions = cv::Mat(1, 4, CV_32F);
 
-    cv::Mat createCovar(cv::Rect2i position);
     cv::Mat createCovar(cv::Rect2i firstPosition, cv::Rect2i secondPosition);
     cv::Mat rectToMat(cv::Rect input, int type);
 };

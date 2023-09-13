@@ -10,20 +10,27 @@
 #include <gst/app/gstappsink.h>
 #include <gst/gstbuffer.h>
 
-class Streamer : public QObject
+#include "settingsconductor.h"
+
+class Streamer : public QObject, public SettingsConductor
 {
     Q_OBJECT
 public:
-    static const int PORT = 5000;
     explicit Streamer(QObject *parent = nullptr);
 
-    bool initStreaming(QHostAddress address, QString cameraDevice);
+    void setSettings(QJsonObject params) override;
     void setCameraDevice(QString cameraDevice);
-    QString getCameraDevice();
     void setRecording(bool value);
-    bool isRecording();
+
+    QJsonObject getSettings() override;
     qint64 getRecStartTime();
+    QString getCameraDevice();
+
+    bool initStreaming(QHostAddress address, QString cameraDevice);
+    bool isRecording();
+
     QProperty<int> frameInterval;
+    static const int PORT = 5000;
 
 signals:
     void frameReady(QImage frame);
@@ -33,9 +40,13 @@ private:
     int m_frameCounter = 0;
     bool m_isRecording = false;
     qint64 m_recStartTime;
-    GstElement *m_pipeline = nullptr, *m_appsink = nullptr, *m_filesink = nullptr;
-    GstElement *m_src = nullptr;
     QString m_currentCamera;
+
+    GstElement *m_pipeline = nullptr;
+    GstElement *m_appsink = nullptr;
+    GstElement *m_filesink = nullptr;
+    GstElement *m_src = nullptr;
+
     static GstFlowReturn appsinkCallback(GstElement *appsink, Streamer *obj);
 };
 

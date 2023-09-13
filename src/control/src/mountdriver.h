@@ -9,27 +9,32 @@
 #include <QTextStream>
 #include <QStringList>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QCamera>
 #include <QMediaDevices>
 #include <QDebug>
-#include "utils.h"
 
-class MountDriver : public QObject
+#include "arduinocommand.h"
+#include "settingsconductor.h"
+
+class MountDriver : public QObject, public SettingsConductor
 {
     Q_OBJECT
-
-    Q_PROPERTY(QString currentPortName READ currentPortName WRITE setCurrentPort NOTIFY currentPortChanged)
-    Q_PROPERTY(QStringList availablePortNames READ availablePortNames NOTIFY availablePortsChanged)
-
-    QML_ELEMENT
-
     public:
         MountDriver();
+        void setSettings(QJsonObject params) override;
         void setCurrentPort(QString portName);
+
+        QJsonObject getSettings() override;
         QStringList availablePortNames();
         QString currentPortName();
         QStringList availableCameraIds();
+
         void rotate(QJsonObject params);
+        bool portExists();
+        bool portIsOpen();
+
+
         QPair<Direction, Direction> arduinoState;
 
     signals:
@@ -41,17 +46,19 @@ class MountDriver : public QObject
         void handleNeuralNetRequest(QPair<Direction, Direction> directions);
 
     private slots:
-        void handleBytesWritten(qint64 bytes);
         void handleTimeout();
         void handleError(QSerialPort::SerialPortError error);
         void handleReadyRead();
 
     private:
         QTimer m_timer;
-        QStringList m_availablePortNames;
         QStringList m_availableCameraIds;
+        QMap<QString, QSerialPort*> m_availablePorts;
         QSerialPort *m_serialPort = nullptr;
+
         void sendSignal(QString signal);
+        void updateAvailablePorts();
+        void updateAvailableCameras();
 };
 
 #endif // MOUNTDRIVER_H

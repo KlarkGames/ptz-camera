@@ -3,58 +3,46 @@
 
 #include <QObject>
 #include <QPointer>
-#include <QSharedPointer>
 #include <QVideoSink>
-#include <QQmlEngine>
 #include <QTimer>
 #include <QImage>
-#include <QPainter>
-#include <QSize>
-#include <QVideoFrame>
-#include <QRandomGenerator>
 #include <QDateTime>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
-#include <QImageWriter>
 #include <QCamera>
 
 #include "server.h"
 #include "mountdriver.h"
 #include "streamer.h"
 #include "deepsort.h"
+#include "settingsconductor.h"
 
-class Processor : public QObject
+class Processor : public QObject, public SettingsConductor
 {
     Q_OBJECT
 
     public:
         explicit Processor(QObject *parent = nullptr);
         ~Processor();
-        void setSettings(QJsonObject params);
-        QJsonObject getSettings();
-
-        MountDriver *mountDriver() const;
-        void rotateMount(QJsonObject);
+        void setSettings(QJsonObject params) override;
         void setCamera(QString cameraName);
-
-        QPair<Direction, Direction> getDirections(QRect bbox);
         void setTracking(bool value);
         void setTargetingId(int id);
 
+        void rotateMount(QJsonObject);
+
+        QJsonObject getSettings() override;
+        QPair<Direction, Direction> getDirections(QRect bbox);
 
     signals:
         void trackingStatusChanged(bool value);
         void videoSinkChanged();
-        void cameraWrapperChanged();
-        void mountDriverChanged();
         void moveCameraRequest(QPair<Direction, Direction> cameraDirections);
         void settingsChanged(QJsonObject params);
 
     public slots:
         void moveCamera();
         void handleFrameWithNN(QImage frame);
-
-
 
     private:
         QPointer<MountDriver> m_mountDriver;

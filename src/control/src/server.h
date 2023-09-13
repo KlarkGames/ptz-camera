@@ -18,14 +18,17 @@ class Server : public QObject
     public:
         explicit Server(QObject *parent = nullptr);
         void updClientSettings(QJsonObject params);
-        void handleObjectsRequest(std::vector<DeepSORT::ObjectInfo> objects);
+        void handleObjectsRequest(std::vector<TrackingObject::ObjectInfo> objects);
         QHostAddress address();
 
     signals:
+        void newConnection();
         void dataReceived(QByteArray);
         void rotateCmdReceived(QJsonObject);
+
         void setSettingRecieved(QJsonObject params);
         void setTrackingObjecIdRecieved(int id);
+
         void getSettingsRequest();
 
     private:

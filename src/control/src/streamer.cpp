@@ -71,11 +71,33 @@ bool Streamer::initStreaming(QHostAddress address, QString cameraDevice)
     return true;
 }
 
+void Streamer::setSettings(QJsonObject params)
+{
+    if (params.contains("recording")) {
+        m_isRecording = params["recording"].toBool();
+    }
+    if (params.contains("currentCamera")) {
+        setCameraDevice(params["currentCamera"].toString());
+    }
+}
+
+QJsonObject Streamer::getSettings()
+{
+    QJsonObject params;
+
+    params["currentCamera"] = m_currentCamera;
+    params["recording"] = m_isRecording;
+    if (m_isRecording) {
+        params["recStartTime"] = QString::number(m_recStartTime);
+    }
+
+    return params;
+}
+
 void Streamer::setCameraDevice(QString cameraDevice)
 {
     gst_element_set_state(m_src, GST_STATE_NULL);
     g_object_set(m_src, "device", cameraDevice.toUtf8().constData(), NULL);
-    qDebug() << "Trying to PLAY: " << gst_element_set_state(m_src, GST_STATE_PLAYING);
     m_currentCamera = cameraDevice;
 
     emit cameraDeviceChanged(cameraDevice);

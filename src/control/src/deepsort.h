@@ -5,63 +5,68 @@
 #include <opencv2/imgproc.hpp>
 #include <vector>
 #include <fstream>
+#include <assert.h>
+
 #include "trackingobject.h"
 #include "hungarian.h"
-#include <assert.h>
+#include "nets/yolo5.h"
+
+#define DetectionVec std::vector<ObjectDetectionNet::Detection>
 
 class DeepSORT
 {
 public:
-    struct Detection
+
+    struct DetectionInfo
     {
         int class_id{};
-        float confidence{0.0};
-        cv::Rect bbox{};
+        cv::Rect2i bbox{};
+        cv::Mat appearance{};
     };
 
-    struct ObjectInfo
-    {
-        int id {-1};
-        int class_id{};
-        std::string className{};
-        cv::Rect2i bbox{};
-    };
+
 
     DeepSORT(const std::string &pathToYolo = "./models/yolov5n.onnx",
              const std::string &pathToClassNames = "./utils/coco.names",
              const std::string &pathToCnn = "./models/MobileNetV2_modified.onnx");
 
-    std::vector<Detection> detectObjects(cv::Mat &inputImage);
+    void forward(cv::Mat &inputImage);
     cv::Mat getAppearance(cv::Mat &objectImage);
-    std::vector<ObjectInfo> forward(cv::Mat &inputImage);
+    bool objectsDetected();
+    std::vector<ObjectDetectionNet::Detection> detectObjects(cv::Mat &inputImage);
+    std::vector<TrackingObject::ObjectInfo> getObjects();
 
 private:
     std::string pathToYolo;
     std::string pathToClassNames;
     std::string pathToCnn;
 
-    cv::dnn::Net m_yolo;
+    Yolo5 *m_yolo;
     cv::dnn::Net m_cnn;
     Hungarian solver;
-    std::vector<TrackingObject> m_trackingObjects;
+    std::map<int, std::vector<TrackingObject>> m_trackingObjectsMap;
     std::vector<std::string> m_class_list;
 
     int m_trackingObjectCounter = 0;
-
-    const int MAX_TRACKING_OBJECT_AGE = 10;
-
-    const float YOLO_INPUT_WIDTH = 640.0;
-    const float YOLO_INPUT_HEIGHT = 640.0;
+    bool m_objectsDetected = false;
 
     const float CNN_INPUT_WIDTH = 64.0;
-    const float CNN_INPUT_HEIGHT = 64.0;
-
-    const float SCORE_THRESHOLD = 0.3;
-    const float NMS_THRESHOLD = 0.45;
-    const float CONFIDENCE_THRESHOLD = 0.45;
+    const float CNN_INPUT_HEIGHT = 64.0;    
     const float LAMBDA = 0.5;
+    const int MAX_TRACKING_OBJECT_AGE = 10;
+
 
     void loadClassNames(std::string path);
+
+    std::vector<cv::Mat> getAppearances(cv::Mat &inputImage, DetectionVec detections);
+    std::map<int, std::vector<DetectionInfo>> getDetectionInfoVec(DetectionVec detections, std::vector<cv::Mat> appearances);
+    std::vector<std::vector<double>> calculateDestances(std::map<int, std::vector<DetectionInfo>> detections, int classId);
+
+    void saveDetections(std::map<int, std::vector<DetectionInfo>> detections);
+    void addAge(std::vector<int> assigments, int classId);
+    void clearOld(int classId);
+    void updateObjects(std::vector<int> assigments, std::map<int, std::vector<DetectionInfo>> detections, std::vector<bool> &processedObjects, int classId);
+
 
 };
 

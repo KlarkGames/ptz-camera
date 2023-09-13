@@ -11,6 +11,7 @@ Processor::Processor(QObject *parent)
     connect(m_server, &Server::rotateCmdReceived, m_mountDriver, &MountDriver::rotate);
     connect(m_server, &Server::setSettingRecieved, this, &Processor::setSettings);
     connect(m_server, &Server::getSettingsRequest, this, [=](){m_server->updClientSettings(getSettings());});
+    connect(m_server, &Server::newConnection, this, [=](){m_server->updClientSettings(getSettings());});
     connect(m_mountDriver, &MountDriver::availablePortsChanged, this, [=](){m_server->updClientSettings(getSettings());});
     connect(m_mountDriver, &MountDriver::availableCamerasChanged, this, [=](){m_server->updClientSettings(getSettings());});
 
@@ -49,11 +50,6 @@ Processor::~Processor()
     m_server->updClientSettings(params);
 }
 
-MountDriver *Processor::mountDriver() const
-{
-    return m_mountDriver.get();
-}
-
 void Processor::rotateMount(QJsonObject params)
 {
     this->m_mountDriver->rotate(params);
@@ -61,27 +57,22 @@ void Processor::rotateMount(QJsonObject params)
 
 void Processor::setSettings(QJsonObject params)
 {
-    if (params.keys().contains("tracking")) {
+    m_streamer->setSettings(params);
+    m_mountDriver->setSettings(params);
+
+    if (params.contains("tracking")) {
         setTracking(params["tracking"].toBool());
     }
-    if (params.keys().contains("recording")) {
-        m_streamer->setRecording(params["recording"].toBool());
-    }
-    if (params.keys().contains("horizontalBorder")) {
+    if (params.contains("horizontalBorder")) {
         m_horizontalBorder = params["horizontalBorder"].toDouble();
     }
-    if (params.keys().contains("verticalBorder")) {
+    if (params.contains("verticalBorder")) {
         m_verticalBorder = params["verticalBorder"].toDouble();
     }
-    if (params.keys().contains("targetId")) {
+    if (params.contains("targetId")) {
         m_targetingId = params["targetId"].toInt();
     }
-    if (params.keys().contains("currentPort")) {
-        m_mountDriver->setCurrentPort(params["currentPort"].toString());
-    }
-    if (params.keys().contains("currentCamera")) {
-        m_streamer->setCameraDevice(params["currentCamera"].toString());
-    }
+
     m_server->updClientSettings(getSettings());
 }
 
@@ -89,19 +80,20 @@ QJsonObject Processor::getSettings()
 {
     QJsonObject params;
 
-    params["tracking"] = m_isTracking;
-    bool recording = m_streamer->isRecording();
-    params["recording"] = recording;
-    if (recording) {
-        params["recStartTime"] = QString::number(m_streamer->getRecStartTime());
+    QJsonObject streamerSettings = m_streamer->getSettings();
+    for (QString key : streamerSettings.keys()) {
+        params.insert(key, streamerSettings[key]);
     }
+
+    QJsonObject mountSettings = m_mountDriver->getSettings();
+    for (QString key : mountSettings.keys()) {
+        params.insert(key, mountSettings[key]);
+    }
+
+    params["tracking"] = m_isTracking;
     params["targetId"] = m_targetingId;
     params["horizontalBorder"] = m_horizontalBorder;
     params["verticalBorder"] = m_verticalBorder;
-    params["avaliablePorts"] = QJsonArray::fromStringList(m_mountDriver->availablePortNames());
-    params["currentPort"] = m_mountDriver->currentPortName();
-    params["avaliableCameras"] = QJsonArray::fromStringList(m_mountDriver->availableCameraIds());
-    params["currentCamera"] = m_streamer->getCameraDevice();
 
     return params;
 }
@@ -116,18 +108,22 @@ void Processor::handleFrameWithNN(QImage frame)
     m_videoSize = frame.size();
     cv::Mat input(m_videoSize.height(), m_videoSize.width(), CV_8UC4, frame.bits());
     cv::cvtColor(input, input, cv::COLOR_BGRA2RGB);
+    m_deepSort->forward(input);
+    std::vector<TrackingObject::ObjectInfo> objects = m_deepSort->getObjects();
 
-    std::vector<DeepSORT::ObjectInfo> objects = m_deepSort->forward(input);
-
-    for (DeepSORT::ObjectInfo object : objects) {
-        if (object.id == m_targetingId) {
-            m_cameraDirections = getDirections(QRect(
+    if (m_deepSort->objectsDetected()) {
+        for (TrackingObject::ObjectInfo object : objects) {
+            if (object.id == m_targetingId) {
+                m_cameraDirections = getDirections(QRect(
                     object.bbox.x,
                     object.bbox.y,
                     object.bbox.width,
                     object.bbox.height
-                ));
+                    ));
+            }
         }
+    } else {
+        m_cameraDirections = QPair<Direction, Direction>(Direction::hold, Direction::hold);
     }
 
     m_server->handleObjectsRequest(objects);
@@ -135,9 +131,7 @@ void Processor::handleFrameWithNN(QImage frame)
 
 void Processor::moveCamera() {
     if (m_isTracking) {
-        if (m_cameraDirections.first != Direction::hold || m_cameraDirections.second != Direction::hold) {
-            emit this->moveCameraRequest(m_cameraDirections);
-        }
+        emit this->moveCameraRequest(m_cameraDirections);
     } else {
         if (m_cameraDirections.first != Direction::hold || m_cameraDirections.second != Direction::hold) {
             m_cameraDirections.first = Direction::hold;

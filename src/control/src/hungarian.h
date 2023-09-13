@@ -1,27 +1,36 @@
 #ifndef HUNGARIAN_H
 #define HUNGARIAN_H
 
-#include <iostream>
 #include <vector>
-#include <cfloat> // for DBL_MAX
-#include <cmath>  // for fabs()
 #include <QDebug>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 
+#define doubleMatrix std::vector<std::vector<double>>
 
 class Hungarian
 {
 public:
-    double solve(std::vector <std::vector<double> >& DistMatrix, std::vector<int>& Assignment);
+    void solve(doubleMatrix& DistMatrix, std::vector<int>& Assignment);
 
 private:
-    void assignmentOptimal(int *assignment, double *cost, double *distMatrix, int nOfRows, int nOfColumns);
-    void buildAssignmentVector(int *assignment, bool *starMatrix, int nOfRows, int nOfColumns);
-    void computeAssignmentCost(int *assignment, double *cost, double *distMatrix, int nOfRows);
-    void step2a(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim);
-    void step2b(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim);
-    void step3(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim);
-    void step4(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim, int row, int col);
-    void step5(int *assignment, double *distMatrix, bool *starMatrix, bool *newStarMatrix, bool *primeMatrix, bool *coveredColumns, bool *coveredRows, int nOfRows, int nOfColumns, int minDim);
+    void assignmentOptimal();
+    void init();
+    void buildAssignmentVector();
+    void computeAssignmentCost();
+    void markOneStarInRowCol();
+    void minimizeCovering(int row, int col, cv::Mat primeMatrix);
+    void subMinFromUncoveredValues();
+
+    unsigned int m_nRows;
+    unsigned int m_nCols;
+    unsigned int m_minDim;
+    std::vector<int> m_assignment;
+    cv::Mat m_distMatrix;
+    cv::Mat m_starMatrix;
+    cv::Mat m_primeMatrix;
+    cv::Mat m_coveredColumns;
+    cv::Mat m_coveredRows;
 };
 
 #endif // HUNGARIAN_H
