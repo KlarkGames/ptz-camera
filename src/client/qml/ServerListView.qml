@@ -29,7 +29,7 @@ ScrollView {
 
         delegate: ItemDelegate {
             width: root.width
-            text: model.address
+            text: model.hostname
             onClicked: root.clicked(root.model.index(index, 0))
         }
     }

@@ -1,5 +1,7 @@
 #include "availableservermodel.h"
 #include "common_defs.h"
+#include <QJsonDocument>
+#include <QJsonObject>
 
 AvailableServerModel::AvailableServerModel(QObject *parent)
     : QAbstractListModel{parent}
@@ -23,9 +25,13 @@ QVariant AvailableServerModel::data(const QModelIndex& index, int role) const
     if (!index.isValid())
         return QVariant();
 
+    const Data &data = m_list.at(index.row());
+
     switch (role) {
     case AddressRole:
-        return m_list.at(index.row()).address;
+        return data.address;
+    case HostnameRole:
+        return data.hostname;
     default:
         return QVariant();
     }
@@ -34,7 +40,8 @@ QVariant AvailableServerModel::data(const QModelIndex& index, int role) const
 QHash<int, QByteArray> AvailableServerModel::roleNames() const
 {
     static const QHash<int, QByteArray> ROLE_NAMES {
-        {AddressRole, "address"}
+        {AddressRole, "address"},
+        {HostnameRole, "hostname"}
     };
 
     return ROLE_NAMES;
@@ -49,7 +56,15 @@ void AvailableServerModel::handlePacket()
         datagram.resize(int(m_socket.pendingDatagramSize()));
         m_socket.readDatagram(datagram.data(), datagram.size());
 
-        QString address = QString::fromUtf8(datagram);
+        QJsonDocument doc = QJsonDocument::fromJson(datagram);
+        if (doc.isNull() || !doc.isObject())
+            continue;
+
+        QJsonObject obj = doc.object();
+
+        QString hostname = obj.value("hostname").toString();
+        QString address = obj.value("address").toString();
+
         auto now = QDateTime::currentMSecsSinceEpoch();
         QPersistentModelIndex index;
         int row;
@@ -64,6 +79,7 @@ void AvailableServerModel::handlePacket()
 
         Data data;
         data.address = address;
+        data.hostname = hostname;
         data.timestamp = now;
 
         row = m_list.size();

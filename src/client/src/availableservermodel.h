@@ -16,7 +16,8 @@ class AvailableServerModel : public QAbstractListModel
     QML_ELEMENT
 public:
     enum RoleNames {
-        AddressRole = Qt::UserRole
+        AddressRole = Qt::UserRole,
+        HostnameRole
     };
     Q_ENUM(RoleNames)
 
@@ -36,6 +37,7 @@ private:
     struct Data {
         qint64 timestamp;
         QString address;
+        QString hostname;
     };
 
     QTimer m_timer;

@@ -1,5 +1,8 @@
 #include "server.h"
 #include "common_defs.h"
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QHostInfo>
 
 Server::Server(QObject *parent) :
     QObject(parent),
@@ -42,7 +45,11 @@ void Server::initBroadcast()
 
 void Server::sendBroadcastPacket()
 {
-    QByteArray data = m_address.toString().toUtf8();
+    QJsonObject obj;
+    obj.insert("address", m_address.toString());
+    obj.insert("hostname", QHostInfo::localHostName());
+
+    QByteArray data = QJsonDocument(obj).toJson(QJsonDocument::Compact);
     auto n = m_broadcastSocket.writeDatagram(data, QHostAddress::Broadcast, BROADCAST_PORT);
 
     if (m_debug && n < data.size()) {
