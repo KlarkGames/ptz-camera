@@ -7,10 +7,15 @@ import QtQuick.Controls.Material
 import com.basilevs.multimedia
 
 GridLayout {
+    id: root
     property string ipAddress : undefined
 
-    columns: parent.width < parent.height ? 1 : 2
-    rows: 3 - columns
+    focus: true
+    onFocusChanged: { focus = true; }
+    Keys.onBackPressed: stackView.pop()
+
+    columns: width < height ? 1 : 3
+    rows: 4 - columns
     columnSpacing: 0
     rowSpacing: 0
 
@@ -30,6 +35,29 @@ GridLayout {
     MediaPlayer {
         id: player
         videoOutput: videoItem
+    }
+
+    Rectangle {
+        color: Material.primary
+
+        implicitWidth: btnback.width
+        implicitHeight: btnback.height
+        Layout.fillWidth: root.width < root.height
+        Layout.fillHeight: !Layout.fillWidth
+
+        GridLayout {
+            anchors.fill: parent
+            columns: root.width < root.height ? 2 : 1
+            rows: 3 - columns
+
+            ToolButton {
+                id: btnback
+                icon.source: "qrc:/res/arrow_back.png"
+                onClicked: stackView.pop()
+            }
+
+            Item { Layout.fillHeight: true; Layout.fillWidth: true;}
+        }
     }
 
     VideoOutput {

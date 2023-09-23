@@ -30,7 +30,6 @@ public:
     bool isRecording();
 
     QProperty<int> frameInterval;
-    static const int PORT = 5000;
 
 signals:
     void frameReady(QImage frame);

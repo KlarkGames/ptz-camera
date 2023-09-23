@@ -1,0 +1,8 @@
+#ifndef COMMON_DEFS_H
+#define COMMON_DEFS_H
+
+#define WS_PORT 41419
+#define BROADCAST_PORT 41419
+#define STREAM_PORT 5000
+
+#endif // COMMON_DEFS_H

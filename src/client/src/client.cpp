@@ -1,6 +1,7 @@
 #include "client.h"
 #include <QJsonObject>
 #include <QHash>
+#include "common_defs.h"
 
 Client::Client(QObject *parent)
     : QObject{parent}
@@ -16,11 +17,11 @@ void Client::connectToHost(QString addr)
     QUrl url = QUrl::fromUserInput(addr);
     url.setScheme("ws");
     if (url.port() < 0)
-        url.setPort(41419);
+        url.setPort(WS_PORT);
 
     QUrl streamSource = url;
     streamSource.setScheme("tcp");
-    streamSource.setPort(5000);
+    streamSource.setPort(STREAM_PORT);
 
     QObject::connect(
         m_player, &QMediaPlayer::hasVideoChanged,

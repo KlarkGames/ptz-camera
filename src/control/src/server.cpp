@@ -1,4 +1,8 @@
 #include "server.h"
+#include "common_defs.h"
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QHostInfo>
 
 Server::Server(QObject *parent) :
     QObject(parent),
@@ -7,12 +11,11 @@ Server::Server(QObject *parent) :
                                             this))
 {
     initServer();
+    initBroadcast();
 }
 
 void Server::initServer()
 {
-    int port = 41419;
-
     const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
     // use the first non-localhost IPv4 address
     for (const QHostAddress &entry : ipAddressesList) {
@@ -26,11 +29,31 @@ void Server::initServer()
         qCritical() << tr("Server:") << tr("Unable to bind network address.");
         return;
     }
-    if (m_pWebSocketServer->listen(m_address, port)) {
+    if (m_pWebSocketServer->listen(m_address, WS_PORT)) {
         if (m_debug)
-            qDebug() << tr("The server is running on: %1:%2").arg(m_address.toString()).arg(port);
+            qDebug() << tr("The server is running on: %1:%2").arg(m_address.toString()).arg(WS_PORT);
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
                 this, &Server::handleConnection);
+    }
+}
+
+void Server::initBroadcast()
+{
+    QObject::connect(&m_broadcastTimer, &QTimer::timeout, this, &Server::sendBroadcastPacket);
+    m_broadcastTimer.start(BROADCAST_INTERVAL_MS);
+}
+
+void Server::sendBroadcastPacket()
+{
+    QJsonObject obj;
+    obj.insert("address", m_address.toString());
+    obj.insert("hostname", QHostInfo::localHostName());
+
+    QByteArray data = QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    auto n = m_broadcastSocket.writeDatagram(data, QHostAddress::Broadcast, BROADCAST_PORT);
+
+    if (m_debug && n < data.size()) {
+        qDebug() << tr("Failed to broadcast datagram!");
     }
 }
 
