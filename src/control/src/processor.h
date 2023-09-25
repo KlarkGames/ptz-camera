@@ -2,7 +2,7 @@
 #define PROCESSOR_H
 
 #include <QObject>
-#include <QPointer>
+#include <QSharedPointer>
 #include <QVideoSink>
 #include <QTimer>
 #include <QImage>
@@ -45,9 +45,9 @@ class Processor : public QObject, public SettingsConductor
         void handleFrameWithNN(QImage frame);
 
     private:
-        QPointer<MountDriver> m_mountDriver;
-        QPointer<Streamer> m_streamer;
-        QPointer<Server> m_server;
+        QSharedPointer<MountDriver> m_mountDriver;
+        QSharedPointer<Streamer> m_streamer;
+        QSharedPointer<Server> m_server;
         QSize m_videoSize;
         bool m_isTracking = false;
 

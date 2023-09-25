@@ -11,6 +11,7 @@
 #include <QTimer>
 
 #include "deepsort.h"
+#include "hotspot.h"
 
 class Server : public QObject
 {
@@ -34,6 +35,7 @@ class Server : public QObject
 
     private:
         void initServer();
+        void initHotspot();
         void initBroadcast();
         QTimer m_broadcastTimer;
         QUdpSocket m_broadcastSocket;
@@ -45,6 +47,7 @@ class Server : public QObject
         qint64 m_recStartTime;
         QWebSocketServer *m_pWebSocketServer;
         QList<QWebSocket*> m_clients;
+        Hotspot hotspot;
 
     private slots:
         void sendBroadcastPacket();

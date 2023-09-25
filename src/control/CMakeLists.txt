@@ -18,6 +18,12 @@ file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/yolov5n.onnx
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/../../models/coco.names
     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/utils)
 
+pkg_check_modules(LIBNM REQUIRED libnm)
+add_library(hotspot src/hotspot.h src/hotspot.cpp)
+target_include_directories(hotspot PUBLIC ${LIBNM_INCLUDE_DIRS})
+target_link_directories(hotspot PUBLIC ${LIBNM_LIBRARY_DIRS})
+target_link_libraries(hotspot PUBLIC ${LIBNM_LIBRARIES})
+
 qt_add_executable(ptz-camera
     src/main.cpp
     src/processor.h
@@ -42,6 +48,11 @@ qt_add_executable(ptz-camera
     src/arduinocommand.h
     src/arduinocommand.cpp
 )
+
+set(HOTSPOT_CONFIG_FILENAME "config.ini")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/${HOTSPOT_CONFIG_FILENAME}"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${HOTSPOT_CONFIG_FILEPATH}")
+target_compile_definitions(ptz-camera PUBLIC HOTSPOT_CONFIG_FILENAME="${HOTSPOT_CONFIG_FILENAME}")
 
 find_package(PkgConfig REQUIRED)
 
@@ -82,6 +93,7 @@ target_link_libraries(ptz-camera PUBLIC
     ${GSTLIBS_LIBRARIES}
     Qt6::Widgets
     ${OpenCV_LIBRARIES}
+    hotspot
 )
 
 qt_add_resources(ptz-camera "ptz-camera"

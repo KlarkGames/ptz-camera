@@ -3,17 +3,16 @@
 
 Processor::Processor(QObject *parent)
     : QObject{parent}
+    , m_server(new Server())
+    , m_mountDriver(new MountDriver())
+    , m_streamer(new Streamer())
 {
-    this->m_server = new Server();
-    this->m_mountDriver = new MountDriver();
-    this->m_streamer = new Streamer();
-
-    connect(m_server, &Server::rotateCmdReceived, m_mountDriver, &MountDriver::rotate);
-    connect(m_server, &Server::setSettingRecieved, this, &Processor::setSettings);
-    connect(m_server, &Server::getSettingsRequest, this, [=](){m_server->updClientSettings(getSettings());});
-    connect(m_server, &Server::newConnection, this, [=](){m_server->updClientSettings(getSettings());});
-    connect(m_mountDriver, &MountDriver::availablePortsChanged, this, [=](){m_server->updClientSettings(getSettings());});
-    connect(m_mountDriver, &MountDriver::availableCamerasChanged, this, [=](){m_server->updClientSettings(getSettings());});
+    connect(m_server.get(), &Server::rotateCmdReceived, m_mountDriver.get(), &MountDriver::rotate);
+    connect(m_server.get(), &Server::setSettingRecieved, this, &Processor::setSettings);
+    connect(m_server.get(), &Server::getSettingsRequest, this, [=](){m_server->updClientSettings(getSettings());});
+    connect(m_server.get(), &Server::newConnection, this, [=](){m_server->updClientSettings(getSettings());});
+    connect(m_mountDriver.get(), &MountDriver::availablePortsChanged, this, [=](){m_server->updClientSettings(getSettings());});
+    connect(m_mountDriver.get(), &MountDriver::availableCamerasChanged, this, [=](){m_server->updClientSettings(getSettings());});
 
     m_streamer->initStreaming(m_server->address(), "/dev/video0");
 
@@ -28,7 +27,7 @@ Processor::Processor(QObject *parent)
     connect(
         this,
         &Processor::moveCameraRequest,
-        m_mountDriver,
+        m_mountDriver.get(),
         &MountDriver::handleNeuralNetRequest
     );
 
@@ -188,9 +187,9 @@ void Processor::setTracking(bool value)
             }
         }
 
-        QObject::connect(m_streamer, &Streamer::frameReady, this, &Processor::handleFrameWithNN);
+        QObject::connect(m_streamer.get(), &Streamer::frameReady, this, &Processor::handleFrameWithNN);
     } else {
-        QObject::disconnect(m_streamer, &Streamer::frameReady, this, &Processor::handleFrameWithNN);
+        QObject::disconnect(m_streamer.get(), &Streamer::frameReady, this, &Processor::handleFrameWithNN);
     }
 
     m_isTracking = value;

@@ -1,3 +1,4 @@
+#include <QSettings>
 #include "server.h"
 #include "common_defs.h"
 #include <QJsonObject>
@@ -10,13 +11,39 @@ Server::Server(QObject *parent) :
                                             QWebSocketServer::NonSecureMode,
                                             this))
 {
+    initHotspot();
     initServer();
     initBroadcast();
+}
+
+void Server::initHotspot()
+{
+    static const char *config_fname = HOTSPOT_CONFIG_FILENAME;
+
+    QSettings settings(config_fname, QSettings::IniFormat);
+
+    if (settings.value("enableHotspot").toString() != "true")
+        return;
+
+    QString ssid = settings.value("ssid").toString();
+    QString password = settings.value("password").toString();
+
+    if (ssid.isEmpty() || password.isEmpty())
+        return;
+
+    bool res = hotspot.start(ssid.toStdString().c_str(), password.toStdString().c_str());
+    if (m_debug) {
+        if (res)
+            qDebug() << QString("Hotspot %1 is up").arg(ssid);
+        else
+            qDebug() << "Failed to start hotspot!";
+    }
 }
 
 void Server::initServer()
 {
     const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+
     // use the first non-localhost IPv4 address
     for (const QHostAddress &entry : ipAddressesList) {
         if (entry != QHostAddress::LocalHost && entry.toIPv4Address()) {
