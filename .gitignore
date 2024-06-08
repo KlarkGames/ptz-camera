@@ -40,4 +40,13 @@ target_wrapper.*
 *.qmlproject.user.*
 
 # QtCreator CMake
-CMakeLists.txt.user*
+CmakeLists.txt.user*
+
+# Dataset Images
+data/**/*.jpg
+data/**/*.png
+
+# IDE Artefacts
+**/.idea
+
+/processed_results.csv

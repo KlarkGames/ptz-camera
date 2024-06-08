@@ -1,0 +1,54 @@
+datasets:
+  train:
+    name:
+      YOLO: YOLO_TRAIN
+      MOBILENET: MOBILENET_TRAIN
+    save_path:
+      YOLO: data/processed/MIAP_YOLO
+      MOBILENET: data/processed/MIAP_MOBILENET/train
+    boxes_path: data/raw/MIAP_TRAIN/metadata/open_images_extended_miap_boxes_train.csv
+    classes_path: data/raw/MIAP_TRAIN/metadata/classes.csv
+    images_path: data/raw/MIAP_TRAIN/data
+    without_occluded: False
+    without_truncated: False
+    without_group: True
+    without_depiction: True
+    split: train
+  val:
+    name:
+      YOLO: YOLO_VAL
+      MOBILENET: MOBILENET_VAL
+    save_path:
+      YOLO: data/processed/MIAP_YOLO
+      MOBILENET: data/processed/MIAP_MOBILENET/val
+    boxes_path: data/raw/MIAP_VAL/metadata/open_images_extended_miap_boxes_val.csv
+    classes_path: data/raw/MIAP_VAL/metadata/classes.csv
+    images_path: data/raw/MIAP_VAL/data
+    without_occluded: False
+    without_truncated: False
+    without_group: True
+    without_depiction: True
+    split: val
+  test:
+    name:
+      YOLO: YOLO_TEST
+      MOBILENET: MOBILENET_TEST
+    save_path:
+      YOLO: data/processed/MIAP_YOLO
+      MOBILENET: data/processed/MIAP_MOBILENET/test
+    boxes_path: data/raw/MIAP_TEST/metadata/open_images_extended_miap_boxes_test.csv
+    classes_path: data/raw/MIAP_TEST/metadata/classes.csv
+    images_path: data/raw/MIAP_TEST/data
+    without_occluded: False
+    without_truncated: False
+    without_group: True
+    without_depiction: True
+    split: test
+
+models:
+  Pretrained_YOLO_320x320:
+    tags: Pretrained_YOLO_320x320_60
+    imgsz: 320
+  Pretrained_YOLO_640x640:
+    tags: Pretrained_YOLO_640x640_60
+    imgsz: 640

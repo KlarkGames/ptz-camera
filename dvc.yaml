@@ -1,0 +1,261 @@
+stages:
+  create_speed_test_dataset:
+    cmd:
+    - mkdir data/processed/SPEED_TEST_IMAGES
+    - >-
+      ls ${datasets.val.images_path} | 
+      shuf -n 100 | 
+      xargs -i cp ${datasets.val.images_path}/{} data/processed/SPEED_TEST_IMAGES/{}
+    deps:
+      - ${datasets.val.images_path}
+    outs:
+      - data/processed/SPEED_TEST_IMAGES
+
+  preprocess_MobileNet_dataset:
+    foreach: ${datasets}
+    do:
+      cmd:
+        - >-
+          python -m src.data.preprocess_mobilenet_dataset
+          --dataset_name ${item.name.MOBILENET}
+          --boxes_path ${item.boxes_path}
+          --classes_path ${item.classes_path}
+          --images_path ${item.images_path}
+          --save_path ${item.save_path.MOBILENET}
+          --without_occluded ${item.without_occluded}
+          --without_truncated ${item.without_truncated}
+          --without_group ${item.without_group}
+          --without_depiction ${item.without_depiction}
+      deps:
+        - ${item.boxes_path}
+        - ${item.classes_path}
+        - ${item.images_path}
+        - src/data/preprocess_mobilenet_dataset.py
+      outs:
+        - ${item.save_path.MOBILENET}/data
+        - ${item.save_path.MOBILENET}/labels.json
+        - ${item.save_path.MOBILENET}/new_labels.json
+
+  preprocess_YOLO_dataset:
+    foreach: ${datasets}
+    do:
+      cmd:
+        - >-
+          python -m src.data.preprocess_yolo_dataset
+          --dataset_name ${item.name.YOLO}
+          --boxes_path ${item.boxes_path}
+          --classes_path ${item.classes_path}
+          --images_path ${item.images_path}
+          --save_path ${item.save_path.YOLO}
+          --without_occluded ${item.without_occluded}
+          --without_truncated ${item.without_truncated}
+          --without_group ${item.without_group}
+          --without_depiction ${item.without_depiction}
+          --split ${item.split}
+      deps:
+        - ${item.boxes_path}
+        - ${item.classes_path}
+        - ${item.images_path}
+        - src/data/preprocess_yolo_dataset.py
+      outs:
+        - ${item.save_path.YOLO}/images/${item.split}
+        - ${item.save_path.YOLO}/labels/${item.split}
+        # - ${item.save_path.YOLO}/dataset.yaml
+
+#  train_MobileNet:
+#    matrix:
+#      size: [320]
+#      epochs: [60]
+#      batch_size: [128]
+#      tag: [Pretrained_ImageNet]
+#      pretrained: [False]
+#    cmd:
+#      - >-
+#        python -m src.learning.imagenet_training.train
+#        --train_data_path ${datasets.train.save_path.MOBILENET}
+#        --val_data_path ${datasets.val.save_path.MOBILENET}
+#        --tag ${item.tag}
+#        --width ${item.size}
+#        --height ${item.size}
+#        --epochs ${item.epochs}
+#        --save_path models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}
+#        --batch_size ${item.batch_size}
+#        --pretrained ${item.pretrained}
+#    deps:
+#      - ${datasets.train.save_path.MOBILENET}/data
+#      - ${datasets.train.save_path.MOBILENET}/new_labels.json
+#      - ${datasets.val.save_path.MOBILENET}/data
+#      - ${datasets.val.save_path.MOBILENET}/new_labels.json
+#      - src/data/preprocess_mobilenet_dataset.py
+#    outs:
+#      - models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}/logs.json
+#      - models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}/MobileNet.onnx
+
+  train_YOLO:
+    matrix:
+      size: [320]
+      epochs: [80]
+      batch_size: [128]
+      tag: [Pretrained_YOLO]
+      pretrained: [True]
+      patience: [25]
+      start_lr: [0.005]
+      end_lr: [0.000005]
+    cmd:
+      - >-
+        yolo
+        task=detect
+        mode=train
+        model=yolov8n.pt
+        imgsz=${item.size}
+        data=${datasets.train.save_path.YOLO}/dataset.yaml
+        epochs=${item.epochs}
+        lr0=${item.start_lr}
+        lrf=${item.end_lr}
+        cos_lr=True
+        batch=${item.batch_size}
+        name=${item.tag}_${item.size}x${item.size}_${item.epochs}
+        single_cls=True
+        plots=True
+        profile=True
+        patience=${item.patience}
+        project=models/YOLO
+    deps:
+      - ${datasets.train.save_path.YOLO}/images
+      - ${datasets.train.save_path.YOLO}/labels
+      - ${datasets.train.save_path.YOLO}/dataset.yaml
+      - src/data/preprocess_yolo_dataset.py
+    outs:
+      - models/YOLO/${item.tag}_${item.size}x${item.size}_${item.epochs}/weights
+
+  export_and_optimize_openvino:
+    matrix:
+      model:
+        - tag: Pretrained_YOLO_320x320_80
+          imgsz: 320
+#        - tag: Pretrained_YOLO_640x640_60
+#          imgsz: 640
+      openvino_param:
+        - half: True
+          int8: False
+        - half: False
+          int8: True
+        - half: False
+          int8: False
+    cmd:
+      - >-
+        yolo export
+        model=models/YOLO/${item.model.tag}/weights/best.pt
+        format=openvino
+        imgsz=${item.model.imgsz}
+        half=${item.openvino_param.half}
+        int8=${item.openvino_param.int8}
+      - >-
+        mkdir -p models/YOLO/${item.model.tag}/exported &&
+        mv
+        models/YOLO/${item.model.tag}/weights/best*_openvino_model
+        models/YOLO/${item.model.tag}/exported/best_half-${item.openvino_param.half}_int8-${item.openvino_param.int8}_openvino_model
+      - >-
+        python -m src.learning.utils.models_speed_test
+        --model_path models/YOLO/${item.model.tag}/exported/best_half-${item.openvino_param.half}_int8-${item.openvino_param.int8}_openvino_model
+        --data_path data/processed/SPEED_TEST_IMAGES
+        --input_size ${item.model.imgsz}
+    deps:
+      - models/YOLO/${item.model.tag}/weights
+      - src/learning/utils/models_speed_test.py
+    outs:
+      - models/YOLO/${item.model.tag}/exported/best_half-${item.openvino_param.half}_int8-${item.openvino_param.int8}_openvino_model
+    always_changed: True
+
+  export_and_optimize_onnx:
+    matrix:
+      model:
+        - tag: Pretrained_YOLO_320x320_80
+          imgsz: 320
+#        - tag: Pretrained_YOLO_640x640_60
+#          imgsz: 640
+      onnx_param:
+        - half: True
+          int8: False
+          simplify: True
+        - half: False
+          int8: True
+          simplify: True
+        - half: False
+          int8: False
+          simplify: True
+        - half: True
+          int8: False
+          simplify: False
+        - half: False
+          int8: True
+          simplify: False
+        - half: False
+          int8: False
+          simplify: False
+    cmd:
+      - >-
+        yolo export
+        model=models/YOLO/${item.model.tag}/weights/best.pt
+        format=onnx
+        imgsz=${item.model.imgsz}
+        half=${item.onnx_param.half}
+        int8=${item.onnx_param.int8}
+        simplify=${item.onnx_param.simplify}
+      - >-
+        mkdir -p models/YOLO/${item.model.tag}/exported &&
+        mv
+        models/YOLO/${item.model.tag}/weights/best.onnx
+        models/YOLO/${item.model.tag}/exported/best_half-${item.onnx_param.half}_int8-${item.onnx_param.int8}_simplify-${item.onnx_param.simplify}.onnx
+      - >-
+        python -m src.learning.utils.models_speed_test
+        --model_path models/YOLO/${item.model.tag}/exported/best_half-${item.onnx_param.half}_int8-${item.onnx_param.int8}_simplify-${item.onnx_param.simplify}.onnx
+        --data_path data/processed/SPEED_TEST_IMAGES
+        --input_size ${item.model.imgsz}
+    deps:
+      - models/YOLO/${item.model.tag}/weights
+      - src/learning/utils/models_speed_test.py
+    outs:
+      - models/YOLO/${item.model.tag}/exported/best_half-${item.onnx_param.half}_int8-${item.onnx_param.int8}_simplify-${item.onnx_param.simplify}.onnx
+    always_changed: True
+
+  export_and_optimize_ncnn:
+    matrix:
+      model:
+        - tag: Pretrained_YOLO_320x320_80
+          imgsz: 320
+#        - tag: Pretrained_YOLO_640x640_60
+#          imgsz: 640
+      ncnn_param:
+        - half: True
+        - half: False
+    cmd:
+      - >-
+        yolo export
+        model=models/YOLO/${item.model.tag}/weights/best.pt
+        format=ncnn
+        imgsz=${item.model.imgsz}
+        half=${item.ncnn_param.half}
+      - >-
+        mkdir -p models/YOLO/${item.model.tag}/exported &&
+        mv
+        models/YOLO/${item.model.tag}/weights/best_ncnn_model
+        models/YOLO/${item.model.tag}/exported/best_half-${item.ncnn_param.half}_ncnn_model
+      - >-
+        python -m src.learning.utils.models_speed_test
+        --model_path models/YOLO/${item.model.tag}/exported/best_half-${item.ncnn_param.half}_ncnn_model
+        --data_path data/processed/SPEED_TEST_IMAGES
+        --input_size ${item.model.imgsz}
+    deps:
+      - models/YOLO/${item.model.tag}/weights
+      - src/learning/utils/models_speed_test.py
+    outs:
+      - models/YOLO/${item.model.tag}/exported/best_half-${item.ncnn_param.half}_ncnn_model
+    always_changed: True
+
+#  validate_models:
+#    cmd: python -m src.learning.utils.validate_models
+#    deps:
+#      - results.csv
+#    outs:
+#      - processed_results.csv

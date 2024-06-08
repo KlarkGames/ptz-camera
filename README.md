@@ -15,6 +15,29 @@ Execute this files to run tests
 
 To check command line options visit this [site](https://doc.qt.io/qt-6/qtest-overview.html#options).
 
+## Dataset Structure
+```
+data
+    MIAP_PROCESSED
+        images
+            train
+            test
+            val
+        labels
+            train
+                labels.json
+                new_labels.json
+                ${image_id}.txt
+            test
+                labels.json
+                new_labels.json
+                ${image_id}.txt
+            val
+                labels.json
+                new_labels.json
+                ${image_id}.txt
+```
+
 ## Firmware
 See documentation [here](docs/FIRMWARE.md).
 

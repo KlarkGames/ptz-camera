@@ -1,0 +1,1006 @@
+schema: '2.0'
+stages:
+  train_MobileNet@256-100-Training:
+    cmd:
+    - python -m src.learning.imagenet_training.train --train_data_path data/processed/MIAP_COCO_TRAIN
+      --val_data_path data/processed/MIAP_COCO_VAL --tag Training --width 256 --height
+      256 --epochs 100 --save_path models/Training_256x256_100
+    deps:
+    - path: data/processed/MIAP_COCO_TRAIN
+      hash: md5
+      md5: f3d809a9ff5f06f0e2b291a7046f9385.dir
+      size: 1853217281
+      nfiles: 5804
+    - path: data/processed/MIAP_COCO_VAL
+      hash: md5
+      md5: ebc01802bfaa9b6beb2ea1842029d05a.dir
+      size: 232398660
+      nfiles: 728
+    - path: src/learning
+      hash: md5
+      md5: c6f58cfecd4a2af865104bd164c1f84a.dir
+      size: 69807
+      nfiles: 17
+    outs:
+    - path: models/Training_256x256_100/MobileNet.onnx
+      hash: md5
+      md5: 2475c8b7707bca4be99bc3d68ded2102
+      size: 14984607
+    - path: models/Training_256x256_100/logs.json
+      hash: md5
+      md5: f399a1867040bdb0080454cbdfb76ef6
+      size: 64625
+  train_MobileNet@512-100-Training:
+    cmd:
+    - python -m src.learning.imagenet_training.train --train_data_path data/processed/MIAP_COCO_TRAIN
+      --val_data_path data/processed/MIAP_COCO_VAL --tag Training --width 512 --height
+      512 --epochs 100 --save_path models/Training_512x512_100
+    deps:
+    - path: data/processed/MIAP_COCO_TRAIN
+      hash: md5
+      md5: f3d809a9ff5f06f0e2b291a7046f9385.dir
+      size: 1853217281
+      nfiles: 5804
+    - path: data/processed/MIAP_COCO_VAL
+      hash: md5
+      md5: ebc01802bfaa9b6beb2ea1842029d05a.dir
+      size: 232398660
+      nfiles: 728
+    - path: src/learning
+      hash: md5
+      md5: c6f58cfecd4a2af865104bd164c1f84a.dir
+      size: 69807
+      nfiles: 17
+    outs:
+    - path: models/Training_512x512_100/MobileNet.onnx
+      hash: md5
+      md5: 78df6f51740e4678d8b059d0cda9fd85
+      size: 14984607
+    - path: models/Training_512x512_100/logs.json
+      hash: md5
+      md5: 2ebfe1e7d252f6569d75da301f5e167d
+      size: 62586
+  train_MobileNet@1024-100-Training:
+    cmd:
+    - python -m src.learning.imagenet_training.train --train_data_path data/processed/MIAP_COCO_TRAIN
+      --val_data_path data/processed/MIAP_COCO_VAL --tag Training --width 1024 --height
+      1024 --epochs 100 --save_path models/Training_1024x1024_100
+    deps:
+    - path: data/processed/MIAP_COCO_TRAIN
+      hash: md5
+      md5: f3d809a9ff5f06f0e2b291a7046f9385.dir
+      size: 1853217281
+      nfiles: 5804
+    - path: data/processed/MIAP_COCO_VAL
+      hash: md5
+      md5: ebc01802bfaa9b6beb2ea1842029d05a.dir
+      size: 232398660
+      nfiles: 728
+    - path: src/learning
+      hash: md5
+      md5: c6f58cfecd4a2af865104bd164c1f84a.dir
+      size: 69807
+      nfiles: 17
+    outs:
+    - path: models/Training_1024x1024_100/MobileNet.onnx
+      hash: md5
+      md5: 6da84bbf1f74492c9c2a5fa215cdd3ff
+      size: 14984607
+    - path: models/Training_1024x1024_100/logs.json
+      hash: md5
+      md5: 22c10be2e4991ad3063e56d96ca1740c
+      size: 64812
+  preprocess_MobileNet_dataset@train:
+    cmd:
+    - python -m src.data.preprocess_mobilenet_dataset --dataset_name MOBILENET_TRAIN
+      --boxes_path data/raw/MIAP_TRAIN/metadata/open_images_extended_miap_boxes_train.csv
+      --classes_path data/raw/MIAP_TRAIN/metadata/classes.csv --images_path data/raw/MIAP_TRAIN/data
+      --save_path data/processed/MIAP_MOBILENET/train --without_occluded false --without_truncated
+      false --without_group true --without_depiction true
+    deps:
+    - path: data/raw/MIAP_TRAIN/data
+      hash: md5
+      md5: 8ab315712d71e240f9c0c77f2f3bb0aa.dir
+      size: 21757631220
+      nfiles: 70000
+    - path: data/raw/MIAP_TRAIN/metadata/classes.csv
+      hash: md5
+      md5: 9846fd22fd2e68b45e3f3810a4c2a32a
+      size: 12011
+    - path: data/raw/MIAP_TRAIN/metadata/open_images_extended_miap_boxes_train.csv
+      hash: md5
+      md5: 0d2396bf8b9407a9c3f8a7186886e188
+      size: 37065903
+    - path: src/data/preprocess_mobilenet_dataset.py
+      hash: md5
+      md5: 1b6fd29c0778afcc8dd44dbc1e0b643f
+      size: 4272
+    outs:
+    - path: data/processed/MIAP_MOBILENET/train/data
+      hash: md5
+      md5: 5a589aef86a75bd139504f7418b0210f.dir
+      size: 10073294970
+      nfiles: 31418
+    - path: data/processed/MIAP_MOBILENET/train/labels.json
+      hash: md5
+      md5: bb4198ae269527652adda6895e6e1681
+      size: 29489265
+    - path: data/processed/MIAP_MOBILENET/train/new_labels.json
+      hash: md5
+      md5: fbea6d14a3a86dd846205a0e45775151
+      size: 31111269
+  preprocess_MobileNet_dataset@val:
+    cmd:
+    - python -m src.data.preprocess_mobilenet_dataset --dataset_name MOBILENET_VAL
+      --boxes_path data/raw/MIAP_VAL/metadata/open_images_extended_miap_boxes_val.csv
+      --classes_path data/raw/MIAP_VAL/metadata/classes.csv --images_path data/raw/MIAP_VAL/data
+      --save_path data/processed/MIAP_MOBILENET/val --without_occluded false --without_truncated
+      false --without_group true --without_depiction true
+    deps:
+    - path: data/raw/MIAP_VAL/data
+      hash: md5
+      md5: 4c1dda1ef3857c435f6a175979284b73.dir
+      size: 2351615638
+      nfiles: 7410
+    - path: data/raw/MIAP_VAL/metadata/classes.csv
+      hash: md5
+      md5: 9846fd22fd2e68b45e3f3810a4c2a32a
+      size: 12011
+    - path: data/raw/MIAP_VAL/metadata/open_images_extended_miap_boxes_val.csv
+      hash: md5
+      md5: 7d276ade495d076812a669b5f8fa98f7
+      size: 2357900
+    - path: src/data/preprocess_mobilenet_dataset.py
+      hash: md5
+      md5: 1b6fd29c0778afcc8dd44dbc1e0b643f
+      size: 4272
+    outs:
+    - path: data/processed/MIAP_MOBILENET/val/data
+      hash: md5
+      md5: 55b1ae23fb1a069f5984e00140036354.dir
+      size: 2139462143
+      nfiles: 6760
+    - path: data/processed/MIAP_MOBILENET/val/labels.json
+      hash: md5
+      md5: 861ddf1ff1c5b4a8a2ce559a98024b3c
+      size: 6102064
+    - path: data/processed/MIAP_MOBILENET/val/new_labels.json
+      hash: md5
+      md5: cd28bb559594b6140c446d4967b384a6
+      size: 6443198
+  preprocess_MobileNet_dataset@test:
+    cmd:
+    - python -m src.data.preprocess_mobilenet_dataset --dataset_name MOBILENET_TEST
+      --boxes_path data/raw/MIAP_TEST/metadata/open_images_extended_miap_boxes_test.csv
+      --classes_path data/raw/MIAP_TEST/metadata/classes.csv --images_path data/raw/MIAP_TEST/data
+      --save_path data/processed/MIAP_MOBILENET/test --without_occluded false --without_truncated
+      false --without_group true --without_depiction true
+    deps:
+    - path: data/raw/MIAP_TEST/data
+      hash: md5
+      md5: b4841f0ad99e875eeaabbd5bc4e50847.dir
+      size: 7036669232
+      nfiles: 22590
+    - path: data/raw/MIAP_TEST/metadata/classes.csv
+      hash: md5
+      md5: 9846fd22fd2e68b45e3f3810a4c2a32a
+      size: 12011
+    - path: data/raw/MIAP_TEST/metadata/open_images_extended_miap_boxes_test.csv
+      hash: md5
+      md5: 70ad3a5bbc57aea65f9fb705605ed925
+      size: 7364546
+    - path: src/data/preprocess_mobilenet_dataset.py
+      hash: md5
+      md5: 1b6fd29c0778afcc8dd44dbc1e0b643f
+      size: 4272
+    outs:
+    - path: data/processed/MIAP_MOBILENET/test/data
+      hash: md5
+      md5: 01335eb4c40b9dca2474a055a0bd515c.dir
+      size: 6406975110
+      nfiles: 20647
+    - path: data/processed/MIAP_MOBILENET/test/labels.json
+      hash: md5
+      md5: 51cbc86870f33cd7b9a1bfd0627bdc19
+      size: 19203080
+    - path: data/processed/MIAP_MOBILENET/test/new_labels.json
+      hash: md5
+      md5: 9580cd7d82c8b5febcd865b25bf127a1
+      size: 20271284
+  preprocess_YOLO_dataset@train:
+    cmd:
+    - python -m src.data.preprocess_yolo_dataset --dataset_name YOLO_TRAIN --boxes_path
+      data/raw/MIAP_TRAIN/metadata/open_images_extended_miap_boxes_train.csv --classes_path
+      data/raw/MIAP_TRAIN/metadata/classes.csv --images_path data/raw/MIAP_TRAIN/data
+      --save_path data/processed/MIAP_YOLO --without_occluded false --without_truncated
+      false --without_group true --without_depiction true --split train
+    deps:
+    - path: data/raw/MIAP_TRAIN/data
+      hash: md5
+      md5: 8ab315712d71e240f9c0c77f2f3bb0aa.dir
+      size: 21757631220
+      nfiles: 70000
+    - path: data/raw/MIAP_TRAIN/metadata/classes.csv
+      hash: md5
+      md5: 9846fd22fd2e68b45e3f3810a4c2a32a
+      size: 12011
+    - path: data/raw/MIAP_TRAIN/metadata/open_images_extended_miap_boxes_train.csv
+      hash: md5
+      md5: 0d2396bf8b9407a9c3f8a7186886e188
+      size: 37065903
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: data/processed/MIAP_YOLO/images/train
+      hash: md5
+      md5: 5a589aef86a75bd139504f7418b0210f.dir
+      size: 10073294970
+      nfiles: 31418
+    - path: data/processed/MIAP_YOLO/labels/train
+      hash: md5
+      md5: 77c486047fc39782196e9df7d3369680.dir
+      size: 3859326
+      nfiles: 31418
+  preprocess_YOLO_dataset@val:
+    cmd:
+    - python -m src.data.preprocess_yolo_dataset --dataset_name YOLO_VAL --boxes_path
+      data/raw/MIAP_VAL/metadata/open_images_extended_miap_boxes_val.csv --classes_path
+      data/raw/MIAP_VAL/metadata/classes.csv --images_path data/raw/MIAP_VAL/data
+      --save_path data/processed/MIAP_YOLO --without_occluded false --without_truncated
+      false --without_group true --without_depiction true --split val
+    deps:
+    - path: data/raw/MIAP_VAL/data
+      hash: md5
+      md5: 4c1dda1ef3857c435f6a175979284b73.dir
+      size: 2351615638
+      nfiles: 7410
+    - path: data/raw/MIAP_VAL/metadata/classes.csv
+      hash: md5
+      md5: 9846fd22fd2e68b45e3f3810a4c2a32a
+      size: 12011
+    - path: data/raw/MIAP_VAL/metadata/open_images_extended_miap_boxes_val.csv
+      hash: md5
+      md5: 7d276ade495d076812a669b5f8fa98f7
+      size: 2357900
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: data/processed/MIAP_YOLO/images/val
+      hash: md5
+      md5: 55b1ae23fb1a069f5984e00140036354.dir
+      size: 2139462143
+      nfiles: 6760
+    - path: data/processed/MIAP_YOLO/labels/val
+      hash: md5
+      md5: 64f5df7cdd37b418df95c27b8f8f4315.dir
+      size: 808910
+      nfiles: 6760
+  preprocess_YOLO_dataset@test:
+    cmd:
+    - python -m src.data.preprocess_yolo_dataset --dataset_name YOLO_TEST --boxes_path
+      data/raw/MIAP_TEST/metadata/open_images_extended_miap_boxes_test.csv --classes_path
+      data/raw/MIAP_TEST/metadata/classes.csv --images_path data/raw/MIAP_TEST/data
+      --save_path data/processed/MIAP_YOLO --without_occluded false --without_truncated
+      false --without_group true --without_depiction true --split test
+    deps:
+    - path: data/raw/MIAP_TEST/data
+      hash: md5
+      md5: b4841f0ad99e875eeaabbd5bc4e50847.dir
+      size: 7036669232
+      nfiles: 22590
+    - path: data/raw/MIAP_TEST/metadata/classes.csv
+      hash: md5
+      md5: 9846fd22fd2e68b45e3f3810a4c2a32a
+      size: 12011
+    - path: data/raw/MIAP_TEST/metadata/open_images_extended_miap_boxes_test.csv
+      hash: md5
+      md5: 70ad3a5bbc57aea65f9fb705605ed925
+      size: 7364546
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: data/processed/MIAP_YOLO/images/test
+      hash: md5
+      md5: 01335eb4c40b9dca2474a055a0bd515c.dir
+      size: 6406975110
+      nfiles: 20647
+    - path: data/processed/MIAP_YOLO/labels/test
+      hash: md5
+      md5: 886a4d052fafa3ef300227b2af0df6f5.dir
+      size: 2542339
+      nfiles: 20647
+  train_MobileNet@1024-50-Training_FULL:
+    cmd:
+    - python -m src.learning.imagenet_training.train --train_data_path data/processed/MIAP_MOBILENET/train
+      --val_data_path data/processed/MIAP_MOBILENET/val --tag Training_FULL --width
+      1024 --height 1024 --epochs 50 --save_path models/Training_FULL_1024x1024_50
+    deps:
+    - path: data/processed/MIAP_MOBILENET/train/data
+      hash: md5
+      md5: 5a589aef86a75bd139504f7418b0210f.dir
+      size: 10073294970
+      nfiles: 31418
+    - path: data/processed/MIAP_MOBILENET/train/new_labels.json
+      hash: md5
+      md5: 51ff9fb270860525065e124a759549a2
+      size: 31111269
+    - path: data/processed/MIAP_MOBILENET/val/data
+      hash: md5
+      md5: 55b1ae23fb1a069f5984e00140036354.dir
+      size: 2139462143
+      nfiles: 6760
+    - path: data/processed/MIAP_MOBILENET/val/new_labels.json
+      hash: md5
+      md5: 2a14f1a8a4a2163f8316d6fbc1e93fb6
+      size: 6443198
+    outs:
+    - path: models/Training_FULL_1024x1024_50/MobileNet.onnx
+      hash: md5
+      md5: 62e22df44fb2ecf4e96753a81d4ccb82
+      size: 14984607
+    - path: models/Training_FULL_1024x1024_50/logs.json
+      hash: md5
+      md5: 611d56bedc2970cfe59127b3ae06e25c
+      size: 32748
+  train_MobileNet@320-60-128-Pretrained_ImageNet-false:
+    cmd:
+    - python -m src.learning.imagenet_training.train --train_data_path data/processed/MIAP_MOBILENET/train
+      --val_data_path data/processed/MIAP_MOBILENET/val --tag Pretrained_ImageNet
+      --width 320 --height 320 --epochs 60 --save_path models/MobileNet/Pretrained_ImageNet_320x320_60
+      --batch_size 128 --pretrained false
+    deps:
+    - path: data/processed/MIAP_MOBILENET/train/data
+      hash: md5
+      md5: 5a589aef86a75bd139504f7418b0210f.dir
+      size: 10073294970
+      nfiles: 31418
+    - path: data/processed/MIAP_MOBILENET/train/new_labels.json
+      hash: md5
+      md5: 51ff9fb270860525065e124a759549a2
+      size: 31111269
+    - path: data/processed/MIAP_MOBILENET/val/data
+      hash: md5
+      md5: 55b1ae23fb1a069f5984e00140036354.dir
+      size: 2139462143
+      nfiles: 6760
+    - path: data/processed/MIAP_MOBILENET/val/new_labels.json
+      hash: md5
+      md5: 2a14f1a8a4a2163f8316d6fbc1e93fb6
+      size: 6443198
+    - path: src/data/preprocess_mobilenet_dataset.py
+      hash: md5
+      md5: 7a79a7da42ad9c53a0a2c05e8dc7c0bc
+      size: 4240
+    outs:
+    - path: models/MobileNet/Pretrained_ImageNet_320x320_60/MobileNet.onnx
+      hash: md5
+      md5: f2083895d8c80f9c5833f48b24537565
+      size: 14984607
+    - path: models/MobileNet/Pretrained_ImageNet_320x320_60/logs.json
+      hash: md5
+      md5: 79eb29887cc3f9cdb6a464de98ae41e1
+      size: 39788
+  train_YOLO@320-60-128-Pretrained_YOLO-true-6:
+    cmd:
+    - yolo task=detect mode=train model=yolov8n.pt imgsz=320 data=data/processed/MIAP_YOLO/dataset.yaml
+      epochs=60 batch=128 name=Pretrained_YOLO_320x320_60 single_cls=True plots=True
+      profile=True patience=6 project=models/YOLO
+    deps:
+    - path: data/processed/MIAP_YOLO/dataset.yaml
+      hash: md5
+      md5: f432c1df1942cb22ae9f8fd69f2b9357
+      size: 168
+    - path: data/processed/MIAP_YOLO/images
+      hash: md5
+      md5: 305cf0cfdc3470e2ffc9f4333922bfc9.dir
+      size: 18619732241
+      nfiles: 58826
+    - path: data/processed/MIAP_YOLO/labels
+      hash: md5
+      md5: 75ce5d769d5cbe0045dd15dd5c7f3ab9.dir
+      size: 19804204
+      nfiles: 58828
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: 9145719134fa8deda28549282feeb757
+      size: 3346
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_320x320_60
+      hash: md5
+      md5: 34f87c37ada1a91c82fe42aa8a0f8b80.dir
+      size: 16674823
+      nfiles: 22
+  train_YOLO@320-60-128-Pretrained_YOLO-true-25:
+    cmd:
+    - yolo task=detect mode=train model=yolov8n.pt imgsz=320 data=data/processed/MIAP_YOLO/dataset.yaml
+      epochs=60 batch=128 name=Pretrained_YOLO_320x320_60 single_cls=True plots=True
+      profile=True patience=25 project=models/YOLO
+    deps:
+    - path: data/processed/MIAP_YOLO/dataset.yaml
+      hash: md5
+      md5: 747bea5623ab3cea326bf448733cc7f3
+      size: 152
+    - path: data/processed/MIAP_YOLO/images
+      hash: md5
+      md5: 305cf0cfdc3470e2ffc9f4333922bfc9.dir
+      size: 18619732241
+      nfiles: 58826
+    - path: data/processed/MIAP_YOLO/labels
+      hash: md5
+      md5: 2ff85e579d8f960016a5b8cdb56e0e50.dir
+      size: 19804204
+      nfiles: 58828
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_320x320_60
+      hash: md5
+      md5: aa5bd8ffd1c4bbf62fa3aafc089d7ac8.dir
+      size: 17509581
+      nfiles: 25
+  train_YOLO@320-60-128-Pretrained_YOLO_OPEN_VINO_QUANTISIZED-true-25:
+    cmd:
+    - yolo task=detect mode=train model=yolov8n.pt imgsz=320 data=data/processed/MIAP_YOLO/dataset.yaml
+      epochs=60 batch=128 name=Pretrained_YOLO_OPEN_VINO_QUANTISIZED_320x320_60 single_cls=True
+      plots=True profile=True patience=25 project=models/YOLO
+    - yolo export 
+      model=models/YOLO/Pretrained_YOLO_OPEN_VINO_QUANTISIZED_320x320_60/weights/best.pt  format=openvino
+      imgsz=320 half=True
+    deps:
+    - path: data/processed/MIAP_YOLO/dataset.yaml
+      hash: md5
+      md5: 747bea5623ab3cea326bf448733cc7f3
+      size: 152
+    - path: data/processed/MIAP_YOLO/images
+      hash: md5
+      md5: 305cf0cfdc3470e2ffc9f4333922bfc9.dir
+      size: 18619732241
+      nfiles: 58826
+    - path: data/processed/MIAP_YOLO/labels
+      hash: md5
+      md5: 2ff85e579d8f960016a5b8cdb56e0e50.dir
+      size: 19804204
+      nfiles: 58828
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_OPEN_VINO_QUANTISIZED_320x320_60
+      hash: md5
+      md5: 30d9c6b49fb9287fe0ba506123d99788.dir
+      size: 23843315
+      nfiles: 28
+  export_and_optimize_openvino@model0-openvino_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=openvino
+      imgsz=320 half=true int8=false
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best*_openvino_model
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_openvino_model
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_openvino_model
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_openvino_model
+      hash: md5
+      md5: f1d8039bc4f12ebc5e0c6f98fe84542f.dir
+      size: 6333562
+      nfiles: 3
+  export_and_optimize_openvino@model0-openvino_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=openvino
+      imgsz=320 half=false int8=true
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best*_openvino_model
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_openvino_model
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_openvino_model
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_openvino_model
+      hash: md5
+      md5: 71e08442cf6ab7010a6347c1979087ae.dir
+      size: 3527409
+      nfiles: 3
+  export_and_optimize_openvino@model0-openvino_param2:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=openvino
+      imgsz=320 half=false int8=false
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best*_openvino_model
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_openvino_model
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_openvino_model
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_openvino_model
+      hash: md5
+      md5: 80f837dd5551425fe696454e8499ed97.dir
+      size: 12279690
+      nfiles: 3
+  export_and_optimize_onnx@model0-openvino_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=onnx
+      imgsz=320 half=true int8=false simplify=true
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_320x320_60/weights/best_half-true_int8-false_simplify=true.onnx
+  export_and_optimize_onnx@model0-openvino_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=onnx
+      imgsz=320 half=false int8=true simplify=true
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_320x320_60/weights/best_half-false_int8-true_simplify=true.onnx
+  export_and_optimize_onnx@model0-openvino_param2:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=onnx
+      imgsz=320 half=false int8=false simplify=true
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_320x320_60/weights/best_half-false_int8-false_simplify=true.onnx
+  export_and_optimize_onnx@model0-openvino_param3:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=onnx
+      imgsz=320 half=true int8=false simplify=false
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_320x320_60/weights/best_half-true_int8-false_simplify=false.onnx
+  export_and_optimize_onnx@model0-openvino_param4:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=onnx
+      imgsz=320 half=false int8=true simplify=false
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_320x320_60/weights/best_half-false_int8-true_simplify=false.onnx
+  export_and_optimize_onnx@model0-openvino_param5:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=onnx
+      imgsz=320 half=false int8=false simplify=false
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_320x320_60/weights/best_half-false_int8-false_simplify=false.onnx
+  create_speed_test_dataset:
+    cmd:
+    - mkdir data/processed/SPEED_TEST_IMAGES
+    - ls data/raw/MIAP_VAL/data |  shuf -n 100 |  xargs -i cp data/raw/MIAP_VAL/data/{}
+      data/processed/SPEED_TEST_IMAGES/{}
+    deps:
+    - path: data/raw/MIAP_VAL/data
+      hash: md5
+      md5: 4c1dda1ef3857c435f6a175979284b73.dir
+      size: 2351615638
+      nfiles: 7410
+    outs:
+    - path: data/processed/SPEED_TEST_IMAGES
+      hash: md5
+      md5: 1b0a53320eab6b5845f8d7024d8aa230.dir
+      size: 29924554
+      nfiles: 100
+  export_and_optimize_onnx@model0-onnx_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=onnx
+      imgsz=320 half=true int8=false simplify=true
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best.onnx
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_simplify-true.onnx
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_simplify-true.onnx
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_simplify-true.onnx
+      hash: md5
+      md5: eeeda6f2ca1c73583b00b804d430b13e
+      size: 12108031
+  export_and_optimize_onnx@model0-onnx_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=onnx
+      imgsz=320 half=false int8=true simplify=true
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best.onnx
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_simplify-true.onnx
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_simplify-true.onnx
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_simplify-true.onnx
+      hash: md5
+      md5: ad6e3abbdfd814fee24bf851698e05c4
+      size: 12108031
+  export_and_optimize_onnx@model0-onnx_param2:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=onnx
+      imgsz=320 half=false int8=false simplify=true
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best.onnx
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_simplify-true.onnx
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_simplify-true.onnx
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_simplify-true.onnx
+      hash: md5
+      md5: 0f8aa83810ca1cef6583b299868babfc
+      size: 12108031
+  export_and_optimize_onnx@model0-onnx_param3:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=onnx
+      imgsz=320 half=true int8=false simplify=false
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best.onnx
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_simplify-false.onnx
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_simplify-false.onnx
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_int8-false_simplify-false.onnx
+      hash: md5
+      md5: 4e49f9809f1f137788d31c10fc12770e
+      size: 12112241
+  export_and_optimize_onnx@model0-onnx_param4:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=onnx
+      imgsz=320 half=false int8=true simplify=false
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best.onnx
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_simplify-false.onnx
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_simplify-false.onnx
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-true_simplify-false.onnx
+      hash: md5
+      md5: 8ec267bd3176fb9b48c987b351159ce2
+      size: 12112241
+  export_and_optimize_onnx@model0-onnx_param5:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=onnx
+      imgsz=320 half=false int8=false simplify=false
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best.onnx
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_simplify-false.onnx
+    - python -m src.learning.utils.models_speed_test --model_path 
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_simplify-false.onnx
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: 
+        models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_int8-false_simplify-false.onnx
+      hash: md5
+      md5: 441bc8a900932f75ed4b4ac873dd59fd
+      size: 12112241
+  export_and_optimize_ncnn@model0-ncnn_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=ncnn
+      imgsz=320 half=true
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best_ncnn_model
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_ncnn_model
+    - python -m src.learning.utils.models_speed_test --model_path models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_ncnn_model
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: bc643dbf9a9c5565e1b7a6d2c6a6da09.dir
+      size: 24769936
+      nfiles: 3
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-true_ncnn_model
+      hash: md5
+      md5: 25f67a3a53861b387ac8e4b2251f2899.dir
+      size: 6082480
+      nfiles: 4
+  export_and_optimize_ncnn@model0-ncnn_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_80/weights/best.pt format=ncnn
+      imgsz=320 half=false
+    - mkdir -p models/YOLO/Pretrained_YOLO_320x320_80/exported && mv models/YOLO/Pretrained_YOLO_320x320_80/weights/best_ncnn_model
+      models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_ncnn_model
+    - python -m src.learning.utils.models_speed_test --model_path models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_ncnn_model
+      --data_path data/processed/SPEED_TEST_IMAGES --input_size 320
+    deps:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 2268d9ceb20f7871f9a12890bba854ec.dir
+      size: 24769936
+      nfiles: 3
+    - path: src/learning/utils/models_speed_test.py
+      hash: md5
+      md5: adb18ca7c3e93c1c43229e9da38e7dae
+      size: 8690
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/exported/best_half-false_ncnn_model
+      hash: md5
+      md5: a77edee08330b3c87ccff71d88604754.dir
+      size: 12083376
+      nfiles: 4
+  export_and_optimize_tflite@model0-tflite_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=tflite
+      imgsz=320 half=true int8=false
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best_saved_model models/YOLO/Pretrained_YOLO_320x320_60/weights/tflite_best_half-true_int8-false
+  export_and_optimize_tflite@model0-tflite_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=tflite
+      imgsz=320 half=false int8=true
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best_saved_model models/YOLO/Pretrained_YOLO_320x320_60/weights/tflite_best_half-false_int8-true
+  export_and_optimize_tflite@model0-tflite_param2:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_320x320_60/weights/best.pt format=tflite
+      imgsz=320 half=false int8=false
+    - mv models/YOLO/Pretrained_YOLO_320x320_60/weights/best_saved_model models/YOLO/Pretrained_YOLO_320x320_60/weights/tflite_best_half-false_int8-false
+  export_and_optimize_openvino@model1-openvino_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=openvino
+      imgsz=640 half=true int8=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_*openvino_model 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/openvino_best_half-true_int8-false
+  export_and_optimize_openvino@model1-openvino_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=openvino
+      imgsz=640 half=false int8=true
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_*openvino_model 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/openvino_best_half-false_int8-true
+  export_and_optimize_openvino@model1-openvino_param2:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=openvino
+      imgsz=640 half=false int8=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_*openvino_model 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/openvino_best_half-false_int8-false
+  export_and_optimize_onnx@model1-onnx_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=onnx
+      imgsz=640 half=true int8=false simplify=true
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/onnx_best_half-true_int8-false_simplify-true.onnx
+  export_and_optimize_onnx@model1-onnx_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=onnx
+      imgsz=640 half=false int8=true simplify=true
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/onnx_best_half-false_int8-true_simplify-true.onnx
+  export_and_optimize_onnx@model1-onnx_param2:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=onnx
+      imgsz=640 half=false int8=false simplify=true
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/onnx_best_half-false_int8-false_simplify-true.onnx
+  export_and_optimize_onnx@model1-onnx_param3:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=onnx
+      imgsz=640 half=true int8=false simplify=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/onnx_best_half-true_int8-false_simplify-false.onnx
+  export_and_optimize_onnx@model1-onnx_param4:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=onnx
+      imgsz=640 half=false int8=true simplify=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/onnx_best_half-false_int8-true_simplify-false.onnx
+  export_and_optimize_onnx@model1-onnx_param5:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=onnx
+      imgsz=640 half=false int8=false simplify=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best.onnx 
+      models/YOLO/Pretrained_YOLO_640x640_60/weights/onnx_best_half-false_int8-false_simplify-false.onnx
+  export_and_optimize_ncnn@model1-ncnn_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=ncnn
+      imgsz=640 half=true
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_ncnn_model models/YOLO/Pretrained_YOLO_640x640_60/weights/ncnn_best_half-true
+  export_and_optimize_ncnn@model1-ncnn_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=ncnn
+      imgsz=640 half=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_ncnn_model models/YOLO/Pretrained_YOLO_640x640_60/weights/ncnn_best_half-false
+  export_and_optimize_tflite@model1-tflite_param0:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=tflite
+      imgsz=640 half=true int8=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_saved_model models/YOLO/Pretrained_YOLO_640x640_60/weights/tflite_best_half-true_int8-false
+  export_and_optimize_tflite@model1-tflite_param1:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=tflite
+      imgsz=640 half=false int8=true
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_saved_model models/YOLO/Pretrained_YOLO_640x640_60/weights/tflite_best_half-false_int8-true
+  export_and_optimize_tflite@model1-tflite_param2:
+    cmd:
+    - yolo export model=models/YOLO/Pretrained_YOLO_640x640_60/weights/best.pt format=tflite
+      imgsz=640 half=false int8=false
+    - mv models/YOLO/Pretrained_YOLO_640x640_60/weights/best_saved_model models/YOLO/Pretrained_YOLO_640x640_60/weights/tflite_best_half-false_int8-false
+  train_YOLO@320-1-128-Pretrained_YOLO-true-25:
+    cmd:
+    - yolo task=detect mode=train model=yolov8n.pt imgsz=320 data=data/processed/MIAP_YOLO/dataset.yaml
+      epochs=1 batch=128 name=Pretrained_YOLO_320x320_1 single_cls=True plots=True
+      profile=True patience=25 project=models/YOLO
+    deps:
+    - path: data/processed/MIAP_YOLO/dataset.yaml
+      hash: md5
+      md5: 736bdbf2d7cdfa185b30a0131f3fb553
+      size: 153
+    - path: data/processed/MIAP_YOLO/images
+      hash: md5
+      md5: 305cf0cfdc3470e2ffc9f4333922bfc9.dir
+      size: 18619732241
+      nfiles: 58826
+    - path: data/processed/MIAP_YOLO/labels
+      hash: md5
+      md5: 2ff85e579d8f960016a5b8cdb56e0e50.dir
+      size: 19804204
+      nfiles: 58828
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_320x320_1
+      hash: md5
+      md5: f9e9b487747454f68f84c49c533b4703.dir
+      size: 16622189
+      nfiles: 23
+  train_YOLO@320-1-128-Pretrained_YOLO-true-25-0.005-5e-06:
+    cmd:
+    - yolo task=detect mode=train model=yolov8n.pt imgsz=320 data=data/processed/MIAP_YOLO/dataset.yaml
+      epochs=1 lr0=0.005 lrf=5e-06 cos_lr=True batch=128 name=Pretrained_YOLO_320x320_1
+      single_cls=True plots=True profile=True patience=25 project=models/YOLO
+    deps:
+    - path: data/processed/MIAP_YOLO/dataset.yaml
+      hash: md5
+      md5: 736bdbf2d7cdfa185b30a0131f3fb553
+      size: 153
+    - path: data/processed/MIAP_YOLO/images
+      hash: md5
+      md5: 305cf0cfdc3470e2ffc9f4333922bfc9.dir
+      size: 18619732241
+      nfiles: 58826
+    - path: data/processed/MIAP_YOLO/labels
+      hash: md5
+      md5: 2ff85e579d8f960016a5b8cdb56e0e50.dir
+      size: 19804204
+      nfiles: 58828
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_320x320_1/weights
+      hash: md5
+      md5: 4e9001e2a214f271876f5c780fe30531.dir
+      size: 12399794
+      nfiles: 2
+  train_YOLO@320-80-128-Pretrained_YOLO-true-25-0.005-5e-06:
+    cmd:
+    - yolo task=detect mode=train model=yolov8n.pt imgsz=320 data=data/processed/MIAP_YOLO/dataset.yaml
+      epochs=80 lr0=0.005 lrf=5e-06 cos_lr=True batch=128 name=Pretrained_YOLO_320x320_80
+      single_cls=True plots=True profile=True patience=25 project=models/YOLO
+    deps:
+    - path: data/processed/MIAP_YOLO/dataset.yaml
+      hash: md5
+      md5: 736bdbf2d7cdfa185b30a0131f3fb553
+      size: 153
+    - path: data/processed/MIAP_YOLO/images
+      hash: md5
+      md5: 305cf0cfdc3470e2ffc9f4333922bfc9.dir
+      size: 18619732241
+      nfiles: 58826
+    - path: data/processed/MIAP_YOLO/labels
+      hash: md5
+      md5: 2ff85e579d8f960016a5b8cdb56e0e50.dir
+      size: 19804204
+      nfiles: 58828
+    - path: src/data/preprocess_yolo_dataset.py
+      hash: md5
+      md5: b80eb0ccc4783309880c973ef65f1bd8
+      size: 3363
+    outs:
+    - path: models/YOLO/Pretrained_YOLO_320x320_80/weights
+      hash: md5
+      md5: 1f84aa9fb730a92df02b9c12cbb7fc3c.dir
+      size: 12416818
+      nfiles: 2
+  validate_models:
+    cmd: python -m src.learning.utils.validate_models
+    deps:
+    - path: results.csv
+      hash: md5
+      md5: f3e476be3e42afc40960c9c24f35095f
+      size: 920
+    outs:
+    - path: processed_results.csv
+      hash: md5
+      md5: 9fbd5539b0a48775cede2b49cad025ab
+      size: 1010
