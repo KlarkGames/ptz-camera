@@ -29,7 +29,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--tag", type=str, default="Debug")
     parser.add_argument("--grayscale_channels", type=int, default=3)
-    parser.add_argument("--log_every", type=int, default=10)
+    parser.add_argument("--log_every", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--pretrained", type=bool, default=True)
     return parser.parse_args()

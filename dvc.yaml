@@ -62,41 +62,41 @@ stages:
         - ${item.save_path.YOLO}/labels/${item.split}
         # - ${item.save_path.YOLO}/dataset.yaml
 
-#  train_MobileNet:
-#    matrix:
-#      size: [320]
-#      epochs: [60]
-#      batch_size: [128]
-#      tag: [Pretrained_ImageNet]
-#      pretrained: [False]
-#    cmd:
-#      - >-
-#        python -m src.learning.imagenet_training.train
-#        --train_data_path ${datasets.train.save_path.MOBILENET}
-#        --val_data_path ${datasets.val.save_path.MOBILENET}
-#        --tag ${item.tag}
-#        --width ${item.size}
-#        --height ${item.size}
-#        --epochs ${item.epochs}
-#        --save_path models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}
-#        --batch_size ${item.batch_size}
-#        --pretrained ${item.pretrained}
-#    deps:
-#      - ${datasets.train.save_path.MOBILENET}/data
-#      - ${datasets.train.save_path.MOBILENET}/new_labels.json
-#      - ${datasets.val.save_path.MOBILENET}/data
-#      - ${datasets.val.save_path.MOBILENET}/new_labels.json
-#      - src/data/preprocess_mobilenet_dataset.py
-#    outs:
-#      - models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}/logs.json
-#      - models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}/MobileNet.onnx
+  train_MobileNet:
+    matrix:
+      size: [320]
+      epochs: [50]
+      batch_size: [128]
+      tag: [Pretrained_MobileNet]
+      pretrained: [False]
+    cmd:
+      - >-
+        python -m src.learning.mobilenet_training.train
+        --train_data_path ${datasets.train.save_path.MOBILENET}
+        --val_data_path ${datasets.val.save_path.MOBILENET}
+        --tag ${item.tag}
+        --width ${item.size}
+        --height ${item.size}
+        --epochs ${item.epochs}
+        --save_path models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}
+        --batch_size ${item.batch_size}
+        --pretrained ${item.pretrained}
+    deps:
+      - ${datasets.train.save_path.MOBILENET}/data
+      - ${datasets.train.save_path.MOBILENET}/new_labels.json
+      - ${datasets.val.save_path.MOBILENET}/data
+      - ${datasets.val.save_path.MOBILENET}/new_labels.json
+      - src/data/preprocess_mobilenet_dataset.py
+    outs:
+      - models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}/logs.json
+      - models/MobileNet/${item.tag}_${item.size}x${item.size}_${item.epochs}/MobileNet.onnx
 
   train_YOLO:
     matrix:
       size: [320]
-      epochs: [80]
-      batch_size: [128]
-      tag: [Pretrained_YOLO]
+      epochs: [50]
+      batch_size: [32]
+      tag: [Debug_YOLO]
       pretrained: [True]
       patience: [25]
       start_lr: [0.005]
@@ -156,7 +156,7 @@ stages:
         models/YOLO/${item.model.tag}/weights/best*_openvino_model
         models/YOLO/${item.model.tag}/exported/best_half-${item.openvino_param.half}_int8-${item.openvino_param.int8}_openvino_model
       - >-
-        python -m src.learning.utils.models_speed_test
+        python -m src.learning.validation_and_testing.models_speed_test
         --model_path models/YOLO/${item.model.tag}/exported/best_half-${item.openvino_param.half}_int8-${item.openvino_param.int8}_openvino_model
         --data_path data/processed/SPEED_TEST_IMAGES
         --input_size ${item.model.imgsz}
@@ -208,7 +208,7 @@ stages:
         models/YOLO/${item.model.tag}/weights/best.onnx
         models/YOLO/${item.model.tag}/exported/best_half-${item.onnx_param.half}_int8-${item.onnx_param.int8}_simplify-${item.onnx_param.simplify}.onnx
       - >-
-        python -m src.learning.utils.models_speed_test
+        python -m src.learning.validation_and_testing.models_speed_test
         --model_path models/YOLO/${item.model.tag}/exported/best_half-${item.onnx_param.half}_int8-${item.onnx_param.int8}_simplify-${item.onnx_param.simplify}.onnx
         --data_path data/processed/SPEED_TEST_IMAGES
         --input_size ${item.model.imgsz}
@@ -242,7 +242,7 @@ stages:
         models/YOLO/${item.model.tag}/weights/best_ncnn_model
         models/YOLO/${item.model.tag}/exported/best_half-${item.ncnn_param.half}_ncnn_model
       - >-
-        python -m src.learning.utils.models_speed_test
+        python -m src.learning.validation_and_testing.models_speed_test
         --model_path models/YOLO/${item.model.tag}/exported/best_half-${item.ncnn_param.half}_ncnn_model
         --data_path data/processed/SPEED_TEST_IMAGES
         --input_size ${item.model.imgsz}

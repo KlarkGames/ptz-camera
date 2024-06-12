@@ -48,5 +48,6 @@ data/**/*.png
 
 # IDE Artefacts
 **/.idea
+**/.dvc
 
 /processed_results.csv
