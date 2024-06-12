@@ -1,8 +1,17 @@
 import random
+import argparse
 
 import cv2
 from deep_sort_realtime.deepsort_tracker import DeepSort
 from ultralytics import YOLO
+
+
+def _parce_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_path", type=str, default='models/yolov8n.pt')
+    parser.add_argument("--max_object_age", type=int, default=30)
+    parser.add_argument("--camera_id", type=int, default=0)
+    return parser.parse_args()
 
 
 class YOLOv8Ultralytics:
@@ -29,11 +38,12 @@ def get_random_color():
 
 # Main tracking script
 def main():
-    yolo = YOLOv8Ultralytics('models/yolov8n.pt')
+    args = _parce_arguments()
+    yolo = YOLOv8Ultralytics(args.model_path)
 
-    tracker = DeepSort(max_age=30)
+    tracker = DeepSort(max_age=args.max_object_age)
     colors = {}
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(args.camera_id)
 
     while cap.isOpened():
         ret, frame = cap.read()
